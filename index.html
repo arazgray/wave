@@ -103,39 +103,50 @@ header p {
 	color: #5e7187;
 }
 
-.country-tabs {
+.filters {
 	border-bottom: 1px solid var(--line);
-	overflow-x: auto;
-	overflow-y: hidden;
-	-webkit-overflow-scrolling: touch;
-	scrollbar-width: none;
+	padding: 0.65rem 0.75rem;
+	display: grid;
+	gap: 0.7rem;
 }
 
-.country-tabs::-webkit-scrollbar {
-	display: none;
+.filter-group {
+	min-width: 0;
 }
 
-#countries {
+.filter-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #5e7187;
+	margin: 0 0 0.45rem;
+}
+
+.filter-grid {
 	list-style: none;
 	margin: 0;
-	padding: 0.5rem 0.65rem;
-	display: flex;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0.45rem;
-	min-width: max-content;
 }
 
-#countries a {
+.filter-grid a {
 	display: block;
-	padding: 0.5rem 0.7rem;
+	padding: 0.55rem 0.5rem;
 	border: 1px solid var(--line);
 	border-radius: 999px;
-	white-space: nowrap;
-	font-size: 0.9rem;
-	line-height: 1;
+	font-size: 0.85rem;
+	line-height: 1.2;
 	background: #fff;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-#countries a.selected {
+.filter-grid a.selected {
 	background: var(--blue);
 	border-color: var(--blue);
 	color: #fff;
@@ -318,17 +329,24 @@ header p {
 <div class="app">
 	<header>
 		<h1>Wave</h1>
-		<p>Good radio, Simple.</p>
+		<p>Good radio, Simple. By <a href="https://arazgray.com" target="_blank">Araz Gray</a></p>
 	</header>
 
-	<nav class="country-tabs" aria-label="Countries">
-		<ul id="countries"></ul>
+	<nav class="filters" aria-label="Filters">
+		<div class="filter-group">
+			<h2 class="filter-title">Country</h2>
+			<ul id="countries" class="filter-grid"></ul>
+		</div>
+		<div class="filter-group">
+			<h2 class="filter-title">Category</h2>
+			<ul id="categories" class="filter-grid"></ul>
+		</div>
 	</nav>
 
 	<main class="station-wrap">
 		<h2 class="section-title"><span id="sectionLabel">Stations</span><span id="stationCount"></span></h2>
 		<ul id="stations"></ul>
-		<p id="stationsMessage">Select a country</p>
+		<p id="stationsMessage">No stations found</p>
 	</main>
 
 	<section class="player-shell" aria-label="Player">
@@ -338,7 +356,7 @@ header p {
 					<div id="playerTitle">Nothing selected</div>
 					<div id="playerQuality"></div>
 				</div>
-				<p id="playerDescription">Choose a country, then choose a station.</p>
+				<p id="playerDescription">Choose filters, then choose a station.</p>
 			</div>
 
 			<div class="player-actions">
@@ -356,6 +374,7 @@ header p {
 <script>
 const audio = document.getElementById('audioPlayer');
 const countriesList = document.getElementById('countries');
+const categoriesList = document.getElementById('categories');
 const stationsList = document.getElementById('stations');
 const stationsMessage = document.getElementById('stationsMessage');
 const playerTitle = document.getElementById('playerTitle');
@@ -368,9 +387,12 @@ const sectionLabel = document.getElementById('sectionLabel');
 const stationCount = document.getElementById('stationCount');
 
 const countries = [...new Set(stations.map(station => station.country))].sort();
+const categories = [...new Set(stations.map(station => station.category))].sort();
 const storageKey = 'wave:lastStation';
+const DEFAULT_COVER_ART = './cover-art-placeholder.jpg';
 
-let currentCountry = null;
+let selectedCountry = 'All';
+let selectedCategory = 'All';
 let currentStations = [];
 let currentStationIndex = -1;
 let currentStation = null;
@@ -378,54 +400,77 @@ let currentUrl = null;
 let currentHls = null;
 let isLoading = false;
 
-function renderCountries() {
-	countriesList.innerHTML = '';
+function getFilteredStations() {
+	return stations.filter(station =>
+		(selectedCountry === 'All' || station.country === selectedCountry) &&
+		(selectedCategory === 'All' || station.category === selectedCategory)
+	);
+}
 
-	countries.forEach(country => {
-		const li = document.createElement('li');
-		const link = document.createElement('a');
-		link.href = '#';
-		link.textContent = country;
-		link.setAttribute('role', 'tab');
-		link.setAttribute('aria-selected', 'false');
-		link.addEventListener('click', event => {
-			event.preventDefault();
-			selectCountry(country);
-		});
+function getSectionLabel() {
+	if (selectedCountry !== 'All' && selectedCategory !== 'All') return selectedCountry + ' · ' + selectedCategory;
+	if (selectedCountry !== 'All') return selectedCountry;
+	if (selectedCategory !== 'All') return selectedCategory;
+	return 'All stations';
+}
 
-		li.appendChild(link);
-		countriesList.appendChild(li);
+function applyFilters() {
+	const keepPlayer = currentStation && (currentUrl || isLoading);
+	currentStations = getFilteredStations();
+	currentStationIndex = keepPlayer ? currentStations.findIndex(station => station.url === currentStation.url) : -1;
+
+	highlightFilter(countriesList, selectedCountry);
+	highlightFilter(categoriesList, selectedCategory);
+	renderStations(currentStations);
+	highlightStation(currentStationIndex);
+	if (!keepPlayer) resetPlayerSelection('Choose a station from the list below.');
+}
+
+function renderFilters() {
+	renderFilterList(countriesList, ['All', ...countries], selectedCountry, value => {
+		selectedCountry = value;
+		applyFilters();
+	});
+	renderFilterList(categoriesList, ['All', ...categories], selectedCategory, value => {
+		selectedCategory = value;
+		applyFilters();
 	});
 }
 
-function selectCountry(country) {
-	const keepPlayer = currentStation && (currentUrl || isLoading);
-	currentCountry = country;
-	currentStations = stations.filter(station => station.country === country);
-	currentStationIndex = keepPlayer ? currentStations.findIndex(station => station.url === currentStation.url) : -1;
+function renderFilterList(listEl, values, selectedValue, onSelect) {
+	listEl.innerHTML = '';
 
-	highlightCountry(country);
-	renderStations(currentStations);
-	highlightStation(currentStationIndex);
-	if (!keepPlayer) resetPlayerSelection('Choose a station.');
-}
-
-function highlightCountry(country) {
-	document.querySelectorAll('#countries a').forEach(link => {
-		const isSelected = link.textContent === country;
+	values.forEach(value => {
+		const li = document.createElement('li');
+		const link = document.createElement('a');
+		link.href = '#';
+		link.textContent = value;
+		link.setAttribute('role', 'tab');
+		const isSelected = value === selectedValue;
 		link.classList.toggle('selected', isSelected);
 		link.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+		link.addEventListener('click', event => {
+			event.preventDefault();
+			onSelect(value);
+		});
 
-		if (isSelected) {
-			link.scrollIntoView({ inline: 'nearest', block: 'nearest' });
-		}
+		li.appendChild(link);
+		listEl.appendChild(li);
+	});
+}
+
+function highlightFilter(listEl, selectedValue) {
+	listEl.querySelectorAll('a').forEach(link => {
+		const isSelected = link.textContent === selectedValue;
+		link.classList.toggle('selected', isSelected);
+		link.setAttribute('aria-selected', isSelected ? 'true' : 'false');
 	});
 }
 
 function renderStations(list) {
 	stationsList.innerHTML = '';
 	stationsMessage.style.display = list.length ? 'none' : 'block';
-	sectionLabel.textContent = currentCountry || 'Stations';
+	sectionLabel.textContent = getSectionLabel();
 	stationCount.textContent = list.length ? list.length + ' station' + (list.length === 1 ? '' : 's') : '';
 
 	list.forEach((station, index) => {
@@ -509,7 +554,7 @@ function resetPlayerSelection(message) {
 	stopAudio();
 	currentStation = null;
 	playerTitle.textContent = 'Nothing selected';
-	playerDescription.textContent = message || 'Choose a country, then choose a station.';
+	playerDescription.textContent = message || 'Choose a station from the list below.';
 	playerQuality.textContent = '';
 	playButton.textContent = 'Play';
 	setControlsEnabled(false);
@@ -614,38 +659,26 @@ function playPreviousStation() {
 }
 
 function moveStation(direction) {
-	if (!countries.length) return;
+	if (!currentStations.length) return;
 
-	let countryIndex = currentCountry ? countries.indexOf(currentCountry) : 0;
-	let nextIndex = currentStationIndex < 0 ? (direction > 0 ? 0 : currentStations.length - 1) : currentStationIndex + direction;
-	let nextCountry = currentCountry;
-	let nextStations = currentStations;
-
-	if (!nextStations.length) {
-		nextCountry = countries[countryIndex] || countries[0];
-		nextStations = stations.filter(station => station.country === nextCountry);
-		nextIndex = direction > 0 ? 0 : nextStations.length - 1;
+	let nextIndex;
+	if (currentStationIndex < 0) {
+		nextIndex = direction > 0 ? 0 : currentStations.length - 1;
+	} else {
+		nextIndex = (currentStationIndex + direction + currentStations.length) % currentStations.length;
 	}
 
-	if (nextIndex >= nextStations.length) {
-		countryIndex = (countryIndex + 1) % countries.length;
-		nextCountry = countries[countryIndex];
-		nextStations = stations.filter(station => station.country === nextCountry);
-		nextIndex = 0;
-	}
-
-	if (nextIndex < 0) {
-		countryIndex = (countryIndex - 1 + countries.length) % countries.length;
-		nextCountry = countries[countryIndex];
-		nextStations = stations.filter(station => station.country === nextCountry);
-		nextIndex = nextStations.length - 1;
-	}
-
-	currentCountry = nextCountry;
-	currentStations = nextStations;
-	highlightCountry(nextCountry);
-	renderStations(nextStations);
 	selectStation(nextIndex, true);
+}
+
+function getStationArtwork(station) {
+	const src = station.cover || DEFAULT_COVER_ART;
+	return [
+		{ src, sizes: '96x96', type: 'image/jpeg' },
+		{ src, sizes: '128x128', type: 'image/jpeg' },
+		{ src, sizes: '192x192', type: 'image/jpeg' },
+		{ src, sizes: '512x512', type: 'image/jpeg' }
+	];
 }
 
 function updateMediaSession(station) {
@@ -654,13 +687,7 @@ function updateMediaSession(station) {
 			title: station.name,
 			artist: station.category,
 			album: station.country,
-			artwork: [
-				{
-					src: 'icon.svg',
-					sizes: '512x512',
-					type: 'image/svg+xml'
-				}
-			]
+			artwork: getStationArtwork(station)
 		});
 
 		navigator.mediaSession.setActionHandler('nexttrack', playNextStation);
@@ -679,6 +706,7 @@ function rememberStation(station) {
 	try {
 		localStorage.setItem(storageKey, JSON.stringify({
 			country: station.country,
+			category: station.category,
 			name: station.name
 		}));
 	} catch (error) {
@@ -688,14 +716,29 @@ function rememberStation(station) {
 function restoreLastStation() {
 	try {
 		const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-		if (!saved || !saved.country) return false;
-		if (!countries.includes(saved.country)) return false;
+		if (!saved || !saved.name) return false;
 
-		selectCountry(saved.country);
+		if (saved.country && countries.includes(saved.country)) {
+			selectedCountry = saved.country;
+		}
+		if (saved.category && categories.includes(saved.category)) {
+			selectedCategory = saved.category;
+		}
+
+		applyFilters();
 
 		const index = currentStations.findIndex(station => station.name === saved.name);
 		if (index >= 0) {
 			selectStation(index, false);
+		} else {
+			// Saved station is outside current filters: fall back to full list.
+			selectedCountry = 'All';
+			selectedCategory = 'All';
+			applyFilters();
+			const fallbackIndex = currentStations.findIndex(station => station.name === saved.name);
+			if (fallbackIndex >= 0) {
+				selectStation(fallbackIndex, false);
+			}
 		}
 
 		return index >= 0;
@@ -739,10 +782,10 @@ audio.addEventListener('error', () => {
 	}
 });
 
-renderCountries();
+renderFilters();
 
-if (countries.length && !restoreLastStation()) {
-	selectCountry(countries[0]);
+if (!restoreLastStation()) {
+	applyFilters();
 }
 
 if ('serviceWorker' in navigator) {

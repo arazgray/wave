@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b2516">
+<title>Wave</title>
+<style>
+:root {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	font-size: 16px;
+	color: #2d1b10;
+	background: #24140c;
+	--player-height: 174px;
+	--case-dark: #2b170d;
+	--case: #6f4526;
+	--case-light: #a86e3f;
+	--edge: #1b1009;
+	--brass: #b98945;
+	--brass-light: #f0c87a;
+	--cream: #fff0cf;
+	--cream-dark: #d8b773;
+	--glass: #17291d;
+	--glass-light: #d5ffbd;
+	--ink: #2d1b10;
+	--muted: #7b6042;
+	--shadow: rgba(14, 8, 4, 0.45);
+	--needle: 0%;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	background:
+		radial-gradient(circle at 50% 0, rgba(255, 229, 174, 0.16), transparent 34rem),
+		linear-gradient(135deg, #1f120b, #3c2315 55%, #170d08);
+	color: var(--ink);
+}
+
+body {
+	min-height: 100dvh;
+	overflow: hidden;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button {
+	font: inherit;
+	appearance: none;
+	border: 0;
+	min-height: 44px;
+	line-height: 1;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible {
+	outline: 3px solid #f5d06d;
+	outline-offset: 3px;
+}
+
+button:disabled {
+	cursor: not-allowed;
+	filter: grayscale(0.7);
+	opacity: 0.55;
+}
+
+.app {
+	width: 100%;
+	max-width: 920px;
+	height: 100dvh;
+	margin: 0 auto;
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	background:
+		linear-gradient(90deg, rgba(255,255,255,0.09), transparent 11%, rgba(0,0,0,0.18) 55%, transparent),
+		linear-gradient(135deg, #7c4b29, #3a2011 72%);
+	border-left: 1px solid rgba(255, 238, 196, 0.18);
+	border-right: 1px solid rgba(0, 0, 0, 0.48);
+	box-shadow: 0 0 42px rgba(0, 0, 0, 0.38);
+	position: relative;
+	overflow: hidden;
+}
+
+.app::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		linear-gradient(90deg, rgba(255,255,255,0.04), transparent 9%, rgba(0,0,0,0.08) 16%, transparent 24%),
+		repeating-linear-gradient(88deg, rgba(255, 235, 183, 0.08) 0 2px, rgba(70, 35, 15, 0.08) 2px 8px);
+	mix-blend-mode: soft-light;
+}
+
+header,
+.country-tabs,
+.station-wrap,
+.player-shell {
+	position: relative;
+	z-index: 1;
+}
+
+header {
+	padding: 0.85rem 0.9rem 0.7rem;
+}
+
+.radio-face {
+	border-radius: 22px;
+	padding: 0.8rem;
+	background:
+		linear-gradient(145deg, rgba(255, 222, 156, 0.2), transparent 35%),
+		linear-gradient(160deg, #8c5831, #3b2112 78%);
+	box-shadow:
+		inset 0 2px 1px rgba(255, 235, 192, 0.32),
+		inset 0 -8px 16px rgba(19, 9, 3, 0.42),
+		0 10px 18px rgba(0, 0, 0, 0.22);
+	border: 1px solid rgba(35, 19, 10, 0.9);
+}
+
+.top-panel {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 92px;
+	gap: 0.65rem;
+	align-items: stretch;
+}
+
+.brand-plate,
+.speaker-grille {
+	border-radius: 16px;
+	box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.2),
+		inset 0 -6px 12px rgba(0,0,0,0.22);
+}
+
+.brand-plate {
+	min-width: 0;
+	padding: 0.72rem 0.78rem;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.32), transparent 46%),
+		linear-gradient(145deg, #f5ddb2, #c79b5b);
+	border: 1px solid #5d3a1e;
+}
+
+h1,
+p {
+	margin: 0;
+}
+
+h1 {
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: clamp(1.55rem, 6vw, 2.45rem);
+	letter-spacing: 0.08em;
+	line-height: 0.95;
+	text-transform: uppercase;
+	text-shadow: 0 1px 0 rgba(255,255,255,0.65);
+}
+
+header p {
+	margin-top: 0.38rem;
+	font-size: 0.78rem;
+	line-height: 1.35;
+	color: #5a3b21;
+	letter-spacing: 0.02em;
+}
+
+.speaker-grille {
+	min-height: 72px;
+	background:
+		repeating-radial-gradient(circle, rgba(28, 15, 8, 0.8) 0 2px, transparent 2px 7px),
+		linear-gradient(145deg, #462717, #1f1008);
+	border: 1px solid rgba(15, 8, 4, 0.9);
+}
+
+.screw-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.6rem;
+	margin-bottom: 0.58rem;
+}
+
+.screw {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background:
+		linear-gradient(90deg, transparent 42%, rgba(62, 36, 18, 0.58) 43% 57%, transparent 58%),
+		radial-gradient(circle at 35% 30%, #ffe29f, #a97635 56%, #3d220f 100%);
+	box-shadow: inset 0 1px 1px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.55);
+}
+
+.country-tabs {
+	padding: 0 0.9rem 0.72rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none;
+}
+
+.country-tabs::-webkit-scrollbar {
+	display: none;
+}
+
+#countries {
+	list-style: none;
+	margin: 0;
+	padding: 0.18rem;
+	display: flex;
+	gap: 0.45rem;
+	min-width: max-content;
+	border-radius: 999px;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.16), transparent 48%),
+		linear-gradient(90deg, #3b2112, #7b4e2c);
+	box-shadow: inset 0 2px 6px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.14);
+}
+
+#countries a {
+	display: block;
+	padding: 0.58rem 0.76rem;
+	border-radius: 999px;
+	white-space: nowrap;
+	font-size: 0.82rem;
+	line-height: 1;
+	color: #f8dfaf;
+	text-shadow: 0 1px 0 #1d1008;
+	border: 1px solid transparent;
+}
+
+#countries a.selected {
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.34), transparent 48%),
+		linear-gradient(145deg, #ffd988, #a97530);
+	border-color: #4c2b13;
+	color: #2a170c;
+	text-shadow: 0 1px 0 rgba(255,255,255,0.42);
+	box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 4px rgba(0,0,0,0.32);
+}
+
+.station-wrap {
+	min-height: 0;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 0 0.9rem 0.74rem;
+}
+
+.station-board {
+	min-height: 100%;
+	padding: 0.75rem;
+	border-radius: 20px;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.24), transparent 28%),
+		linear-gradient(160deg, #f2dfbd, #c49b60);
+	border: 1px solid #4c2d16;
+	box-shadow:
+		inset 0 2px 0 rgba(255,255,255,0.38),
+		inset 0 -8px 16px rgba(54, 29, 12, 0.22),
+		0 8px 14px rgba(0,0,0,0.2);
+}
+
+.section-title {
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	margin: 0 0 0.55rem;
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	color: #4b3019;
+}
+
+#stationCount {
+	font-weight: 500;
+	opacity: 0.75;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+#stations {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#stations li + li {
+	margin-top: 0.5rem;
+}
+
+.station-link {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.75rem;
+	border-radius: 14px;
+	padding: 0.7rem 0.76rem;
+	min-height: 58px;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.62), transparent 46%),
+		linear-gradient(145deg, #fff2ce, #d6b375);
+	border: 1px solid #8b693c;
+	box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.68),
+		0 2px 0 #8c6333,
+		0 5px 8px rgba(48, 25, 10, 0.14);
+	transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.station-link:active {
+	transform: translateY(1px);
+	box-shadow:
+		inset 0 2px 4px rgba(65, 37, 14, 0.25),
+		0 1px 0 #8c6333;
+}
+
+.station-link.selected {
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.54), transparent 44%),
+		linear-gradient(145deg, #ffe1a0, #c48436);
+	border-color: #553015;
+	color: #241207;
+	box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.72),
+		0 0 0 2px rgba(87, 48, 17, 0.28),
+		0 4px 8px rgba(48, 25, 10, 0.22);
+}
+
+.station-details {
+	min-width: 0;
+}
+
+.equalizer {
+	display: none;
+	width: 34px;
+	height: 24px;
+	border-radius: 5px;
+	background:
+		repeating-linear-gradient(90deg, #26401f 0 4px, transparent 4px 7px),
+		linear-gradient(180deg, #caff9a, #79b95d);
+	box-shadow: inset 0 0 0 1px rgba(33, 59, 25, 0.6);
+}
+
+.station-link.playing .equalizer {
+	display: block;
+	animation: pulseSignal 780ms steps(2, end) infinite;
+}
+
+@keyframes pulseSignal {
+	50% { opacity: 0.45; }
+}
+
+.station-name {
+	display: block;
+	font-size: 0.97rem;
+	line-height: 1.25;
+	font-weight: 800;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.metadata {
+	display: block;
+	font-size: 0.74rem;
+	line-height: 1.3;
+	margin-top: 0.25rem;
+	color: #5c4125;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#stationsMessage {
+	font-size: 0.9rem;
+	line-height: 1.4;
+	padding: 1rem 0.15rem;
+	color: #5c4125;
+}
+
+.player-shell {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	padding: 0 0.9rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+	min-height: var(--player-height);
+}
+
+.radio-player {
+	border-radius: 24px 24px 18px 18px;
+	padding: 0.78rem;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.24), transparent 45%),
+		linear-gradient(145deg, #8b552f, #351e10 78%);
+	border: 1px solid rgba(30, 17, 9, 0.92);
+	box-shadow:
+		inset 0 2px 0 rgba(255,238,201,0.28),
+		inset 0 -10px 20px rgba(15,8,4,0.45),
+		0 -8px 22px rgba(0,0,0,0.22);
+}
+
+.tuning-window {
+	position: relative;
+	border-radius: 15px;
+	padding: 0.52rem 0.65rem 0.64rem;
+	background:
+		linear-gradient(180deg, rgba(213,255,189,0.18), transparent 48%),
+		linear-gradient(145deg, #253b2c, #0d1d14);
+	border: 1px solid #0b110d;
+	box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.16),
+		inset 0 0 18px rgba(124, 255, 154, 0.08),
+		0 3px 8px rgba(0,0,0,0.3);
+	color: #d7ffbf;
+	min-width: 0;
+}
+
+.tuning-window::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: linear-gradient(110deg, rgba(255,255,255,0.18), transparent 42%);
+	pointer-events: none;
+}
+
+.tuning-scale {
+	position: relative;
+	height: 18px;
+	margin-bottom: 0.42rem;
+	border-radius: 999px;
+	background:
+		repeating-linear-gradient(90deg, rgba(214,255,191,0.85) 0 1px, transparent 1px 8%),
+		linear-gradient(90deg, rgba(214,255,191,0.2), rgba(214,255,191,0.05));
+	opacity: 0.9;
+	overflow: hidden;
+}
+
+.tuning-scale::after {
+	content: "";
+	position: absolute;
+	top: -2px;
+	left: var(--needle);
+	width: 3px;
+	height: 22px;
+	border-radius: 2px;
+	background: #ffdf58;
+	box-shadow: 0 0 8px rgba(255, 223, 88, 0.8);
+	transition: left 180ms ease;
+}
+
+.now-playing {
+	min-width: 0;
+	position: relative;
+}
+
+.player-title-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.6rem;
+	align-items: baseline;
+}
+
+#playerTitle {
+	font-size: 1rem;
+	font-weight: 800;
+	line-height: 1.18;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-shadow: 0 0 8px rgba(166,255,132,0.18);
+}
+
+#playerQuality {
+	font-size: 0.69rem;
+	white-space: nowrap;
+	opacity: 0.78;
+}
+
+#playerDescription {
+	font-size: 0.78rem;
+	line-height: 1.35;
+	margin-top: 0.24rem;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	opacity: 0.86;
+}
+
+.player-actions {
+	display: grid;
+	grid-template-columns: 1fr 1.25fr 1fr;
+	gap: 0.52rem;
+	margin-top: 0.58rem;
+}
+
+.player-actions button {
+	position: relative;
+	border-radius: 999px;
+	padding: 0.74rem 0.7rem;
+	font-weight: 800;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	color: #281609;
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.6), transparent 46%),
+		linear-gradient(145deg, #ffd680, #9f6729);
+	border: 1px solid #41230e;
+	box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.7),
+		inset 0 -4px 8px rgba(82,42,10,0.22),
+		0 4px 0 #3a1e0b,
+		0 7px 10px rgba(0,0,0,0.32);
+}
+
+.player-actions button:active:not(:disabled) {
+	transform: translateY(3px);
+	box-shadow:
+		inset 0 2px 7px rgba(48, 25, 8, 0.38),
+		0 1px 0 #3a1e0b;
+}
+
+.player-actions .secondary {
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.52), transparent 46%),
+		linear-gradient(145deg, #e9d2a3, #8f6a36);
+}
+
+html[data-state="playing"] #playButton {
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.52), transparent 44%),
+		linear-gradient(145deg, #b5ff8c, #4f842a);
+}
+
+html[data-state="loading"] #playButton {
+	animation: loadingGlow 800ms ease-in-out infinite alternate;
+}
+
+@keyframes loadingGlow {
+	from { filter: brightness(0.95); }
+	to { filter: brightness(1.18); }
+}
+
+@media screen and (min-width: 650px) {
+	:root {
+		--player-height: 156px;
+	}
+
+	.app {
+		border-radius: 30px;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	header,
+	.country-tabs,
+	.station-wrap,
+	.player-shell {
+		padding-left: 1.1rem;
+		padding-right: 1.1rem;
+	}
+
+	.radio-face {
+		padding: 0.95rem;
+	}
+
+	.top-panel {
+		grid-template-columns: minmax(0, 1fr) 170px;
+	}
+
+	.speaker-grille {
+		min-height: 82px;
+	}
+
+	.station-board {
+		padding: 0.9rem;
+	}
+
+	.radio-player {
+		display: grid;
+		grid-template-columns: 1fr 332px;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.player-actions {
+		margin-top: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 1ms !important;
+		scroll-behavior: auto !important;
+		transition-duration: 1ms !important;
+	}
+}
+</style>
+</head>
+<body>
+<div class="app">
+	<header>
+		<div class="radio-face">
+			<div class="screw-row" aria-hidden="true"><span class="screw"></span><span class="screw"></span></div>
+			<div class="top-panel">
+				<div class="brand-plate">
+					<h1>Wave</h1>
+					<p>Good radio, simple. Choose a country, pick a station, and press play.</p>
+				</div>
+				<div class="speaker-grille" aria-hidden="true"></div>
+			</div>
+		</div>
+	</header>
+
+	<nav class="country-tabs" aria-label="Countries">
+		<ul id="countries"></ul>
+	</nav>
+
+	<main class="station-wrap">
+		<div class="station-board">
+			<h2 class="section-title"><span id="sectionLabel">Stations</span><span id="stationCount"></span></h2>
+			<ul id="stations"></ul>
+			<p id="stationsMessage">Select a country</p>
+		</div>
+	</main>
+
+	<section class="player-shell" aria-label="Player">
+		<div id="player" class="radio-player">
+			<div class="tuning-window">
+				<div class="tuning-scale" aria-hidden="true"></div>
+				<div class="now-playing">
+					<div class="player-title-row">
+						<div id="playerTitle">Nothing selected</div>
+						<div id="playerQuality"></div>
+					</div>
+					<p id="playerDescription">Choose a country, then choose a station.</p>
+				</div>
+			</div>
+
+			<div class="player-actions">
+				<button id="prevButton" type="button" class="secondary" aria-label="Previous station" disabled>Prev</button>
+				<button id="playButton" type="button" aria-label="Play or stop" disabled>Play</button>
+				<button id="nextButton" type="button" class="secondary" aria-label="Next station" disabled>Next</button>
+			</div>
+		</div>
+	</section>
+</div>
+
+<audio id="audioPlayer" controls style="display:none"></audio>
+<script src="./hls.js"></script>
+<script src="./stations.js"></script>
+<script>
+const audio = document.getElementById('audioPlayer');
+const countriesList = document.getElementById('countries');
+const stationsList = document.getElementById('stations');
+const stationsMessage = document.getElementById('stationsMessage');
+const playerTitle = document.getElementById('playerTitle');
+const playerDescription = document.getElementById('playerDescription');
+const playerQuality = document.getElementById('playerQuality');
+const prevButton = document.getElementById('prevButton');
+const playButton = document.getElementById('playButton');
+const nextButton = document.getElementById('nextButton');
+const sectionLabel = document.getElementById('sectionLabel');
+const stationCount = document.getElementById('stationCount');
+const radioPlayer = document.getElementById('player');
+
+const countries = [...new Set(stations.map(station => station.country))].sort();
+const storageKey = 'wave:lastStation';
+
+let currentCountry = null;
+let currentStations = [];
+let currentStationIndex = -1;
+let currentStation = null;
+let currentUrl = null;
+let currentHls = null;
+let isLoading = false;
+
+function setAppState(state) {
+	if (!state) {
+		delete document.documentElement.dataset.state;
+		return;
+	}
+	document.documentElement.dataset.state = state;
+}
+
+function updateTuningNeedle(index) {
+	if (!radioPlayer) return;
+	if (!currentStations.length || index < 0) {
+		radioPlayer.style.setProperty('--needle', '0%');
+		return;
+	}
+
+	const maxIndex = Math.max(currentStations.length - 1, 1);
+	const percent = Math.round((index / maxIndex) * 100);
+	radioPlayer.style.setProperty('--needle', percent + '%');
+}
+
+function renderCountries() {
+	countriesList.innerHTML = '';
+
+	countries.forEach(country => {
+		const li = document.createElement('li');
+		const link = document.createElement('a');
+		link.href = '#';
+		link.textContent = country;
+		link.setAttribute('role', 'tab');
+		link.setAttribute('aria-selected', 'false');
+		link.addEventListener('click', event => {
+			event.preventDefault();
+			selectCountry(country);
+		});
+
+		li.appendChild(link);
+		countriesList.appendChild(li);
+	});
+}
+
+function selectCountry(country) {
+	const keepPlayer = currentStation && (currentUrl || isLoading);
+	currentCountry = country;
+	currentStations = stations.filter(station => station.country === country);
+	currentStationIndex = keepPlayer ? currentStations.findIndex(station => station.url === currentStation.url) : -1;
+
+	highlightCountry(country);
+	renderStations(currentStations);
+	highlightStation(currentStationIndex);
+	updateTuningNeedle(currentStationIndex);
+	if (!keepPlayer) resetPlayerSelection('Choose a station.');
+}
+
+function highlightCountry(country) {
+	document.querySelectorAll('#countries a').forEach(link => {
+		const isSelected = link.textContent === country;
+		link.classList.toggle('selected', isSelected);
+		link.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+
+		if (isSelected) {
+			link.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+		}
+	});
+}
+
+function renderStations(list) {
+	stationsList.innerHTML = '';
+	stationsMessage.style.display = list.length ? 'none' : 'block';
+	sectionLabel.textContent = currentCountry || 'Stations';
+	stationCount.textContent = list.length ? list.length + ' station' + (list.length === 1 ? '' : 's') : '';
+
+	list.forEach((station, index) => {
+		const li = document.createElement('li');
+		const link = document.createElement('a');
+		const details = document.createElement('span');
+		const name = document.createElement('span');
+		const meta = document.createElement('span');
+		const equalizer = document.createElement('span');
+
+		link.href = '#';
+		link.className = 'station-link';
+		link.dataset.index = String(index);
+		link.setAttribute('aria-current', 'false');
+
+		details.className = 'station-details';
+
+		name.className = 'station-name';
+		name.textContent = station.name;
+
+		meta.className = 'metadata';
+		meta.textContent = station.country + ' · ' + station.category + ' · ' + station.quality;
+
+		equalizer.className = 'equalizer';
+		equalizer.setAttribute('aria-hidden', 'true');
+
+		details.appendChild(name);
+		details.appendChild(meta);
+		link.appendChild(details);
+		link.appendChild(equalizer);
+		link.addEventListener('click', event => {
+			event.preventDefault();
+			selectStation(index, true);
+		});
+
+		li.appendChild(link);
+		stationsList.appendChild(li);
+	});
+}
+
+function selectStation(index, autoplay) {
+	if (!currentStations[index]) return;
+
+	const wasPlaying = !!currentUrl && !audio.paused;
+	const station = currentStations[index];
+	currentStationIndex = index;
+	currentStation = station;
+
+	highlightStation(index);
+	updateTuningNeedle(index);
+	setPlayerStation(station);
+	setControlsEnabled(true);
+	rememberStation(station);
+
+	if (autoplay || wasPlaying) {
+		playStation(station);
+	}
+}
+
+function highlightStation(index) {
+	document.querySelectorAll('#stations .station-link').forEach(link => {
+		const isSelected = Number(link.dataset.index) === index;
+		link.classList.toggle('selected', isSelected);
+		link.classList.toggle('playing', isSelected && currentUrl && !audio.paused);
+		link.setAttribute('aria-current', isSelected ? 'true' : 'false');
+		if (isSelected) link.scrollIntoView({ block: 'nearest' });
+	});
+}
+
+function setPlayerStation(station) {
+	playerTitle.textContent = station.name;
+	playerDescription.textContent = station.description;
+	playerQuality.textContent = station.category + ' · ' + station.quality;
+	playButton.textContent = currentUrl === station.url && !audio.paused ? 'Stop' : 'Play';
+	highlightStation(currentStationIndex);
+	document.title = station.name + ' · Wave';
+}
+
+function resetPlayerSelection(message) {
+	stopAudio();
+	currentStation = null;
+	currentStationIndex = -1;
+	updateTuningNeedle(-1);
+	playerTitle.textContent = 'Nothing selected';
+	playerDescription.textContent = message || 'Choose a country, then choose a station.';
+	playerQuality.textContent = '';
+	playButton.textContent = 'Play';
+	setControlsEnabled(false);
+	document.title = 'Wave';
+}
+
+function setControlsEnabled(enabled) {
+	prevButton.disabled = !enabled;
+	playButton.disabled = !enabled;
+	nextButton.disabled = !enabled;
+}
+
+function destroyHls() {
+	if (currentHls) {
+		currentHls.destroy();
+		currentHls = null;
+	}
+
+	if (audio.hls) {
+		audio.hls.destroy();
+		audio.hls = null;
+	}
+}
+
+function stopAudio() {
+	isLoading = false;
+	destroyHls();
+	audio.pause();
+	audio.removeAttribute('src');
+	audio.load();
+	currentUrl = null;
+	playButton.textContent = 'Play';
+	setAppState(currentStation ? 'ready' : 'idle');
+	highlightStation(currentStationIndex);
+}
+
+function togglePlay() {
+	const station = currentStations[currentStationIndex] || currentStation;
+	if (!station || isLoading) return;
+
+	if (currentUrl === station.url && !audio.paused) {
+		stopAudio();
+		return;
+	}
+
+	playStation(station);
+}
+
+function playStation(station) {
+	if (!station) return;
+
+	stopAudio();
+	currentStation = station;
+	isLoading = true;
+	currentUrl = station.url;
+	playButton.textContent = 'Loading';
+	setAppState('loading');
+	updateMediaSession(station);
+
+	const onPlaySuccess = () => {
+		isLoading = false;
+		playButton.textContent = 'Stop';
+		setAppState('playing');
+		highlightStation(currentStationIndex);
+		document.title = station.name + ' · Wave';
+	};
+
+	const onPlayError = error => {
+		isLoading = false;
+		stopAudio();
+	};
+
+	if (station.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+		currentHls = new Hls();
+		audio.hls = currentHls;
+		currentHls.loadSource(station.url);
+		currentHls.attachMedia(audio);
+		currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+			audio.play().then(onPlaySuccess).catch(onPlayError);
+		});
+		currentHls.on(Hls.Events.ERROR, (event, data) => {
+			if (data && data.fatal) {
+				onPlayError(data.details || 'HLS error');
+			}
+		});
+		return;
+	}
+
+	if (station.url.includes('.m3u8') && audio.canPlayType('application/vnd.apple.mpegurl')) {
+		audio.src = station.url;
+		audio.play().then(onPlaySuccess).catch(onPlayError);
+		return;
+	}
+
+	audio.src = station.url;
+	audio.play().then(onPlaySuccess).catch(onPlayError);
+}
+
+function playNextStation() {
+	moveStation(1);
+}
+
+function playPreviousStation() {
+	moveStation(-1);
+}
+
+function moveStation(direction) {
+	if (!countries.length) return;
+
+	let countryIndex = currentCountry ? countries.indexOf(currentCountry) : 0;
+	let nextIndex = currentStationIndex < 0 ? (direction > 0 ? 0 : currentStations.length - 1) : currentStationIndex + direction;
+	let nextCountry = currentCountry;
+	let nextStations = currentStations;
+
+	if (!nextStations.length) {
+		nextCountry = countries[countryIndex] || countries[0];
+		nextStations = stations.filter(station => station.country === nextCountry);
+		nextIndex = direction > 0 ? 0 : nextStations.length - 1;
+	}
+
+	if (nextIndex >= nextStations.length) {
+		countryIndex = (countryIndex + 1) % countries.length;
+		nextCountry = countries[countryIndex];
+		nextStations = stations.filter(station => station.country === nextCountry);
+		nextIndex = 0;
+	}
+
+	if (nextIndex < 0) {
+		countryIndex = (countryIndex - 1 + countries.length) % countries.length;
+		nextCountry = countries[countryIndex];
+		nextStations = stations.filter(station => station.country === nextCountry);
+		nextIndex = nextStations.length - 1;
+	}
+
+	currentCountry = nextCountry;
+	currentStations = nextStations;
+	highlightCountry(nextCountry);
+	renderStations(nextStations);
+	selectStation(nextIndex, true);
+}
+
+function updateMediaSession(station) {
+	if ('mediaSession' in navigator) {
+		navigator.mediaSession.metadata = new MediaMetadata({
+			title: station.name,
+			artist: station.category,
+			album: station.country,
+			artwork: [
+				{
+					src: 'icon.svg',
+					sizes: '512x512',
+					type: 'image/svg+xml'
+				}
+			]
+		});
+
+		navigator.mediaSession.setActionHandler('nexttrack', playNextStation);
+		navigator.mediaSession.setActionHandler('previoustrack', playPreviousStation);
+		navigator.mediaSession.setActionHandler('play', () => {
+			const station = currentStations[currentStationIndex] || currentStation;
+			if (station) playStation(station);
+		});
+		navigator.mediaSession.setActionHandler('pause', () => {
+			stopAudio();
+		});
+	}
+}
+
+function rememberStation(station) {
+	try {
+		localStorage.setItem(storageKey, JSON.stringify({
+			country: station.country,
+			name: station.name
+		}));
+	} catch (error) {
+	}
+}
+
+function restoreLastStation() {
+	try {
+		const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+		if (!saved || !saved.country) return false;
+		if (!countries.includes(saved.country)) return false;
+
+		selectCountry(saved.country);
+
+		const index = currentStations.findIndex(station => station.name === saved.name);
+		if (index >= 0) {
+			selectStation(index, false);
+		}
+
+		return index >= 0;
+	} catch (error) {
+		return false;
+	}
+}
+
+playButton.addEventListener('click', togglePlay);
+prevButton.addEventListener('click', playPreviousStation);
+nextButton.addEventListener('click', playNextStation);
+
+document.addEventListener('keydown', event => {
+	if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+	if (event.key === 'ArrowRight') {
+		event.preventDefault();
+		playNextStation();
+	}
+
+	if (event.key === 'ArrowLeft') {
+		event.preventDefault();
+		playPreviousStation();
+	}
+
+	if (event.key === ' ' && currentStation) {
+		event.preventDefault();
+		togglePlay();
+	}
+});
+
+audio.addEventListener('ended', () => {
+	playButton.textContent = 'Play';
+	currentUrl = null;
+	setAppState(currentStation ? 'ready' : 'idle');
+	highlightStation(currentStationIndex);
+});
+
+audio.addEventListener('error', () => {
+	if (currentUrl) {
+		stopAudio();
+	}
+});
+
+renderCountries();
+setAppState('idle');
+
+if (countries.length && !restoreLastStation()) {
+	selectCountry(countries[0]);
+}
+
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('sw.js').catch(() => {
+		});
+	});
+}
+</script>
+</body>
+</html>

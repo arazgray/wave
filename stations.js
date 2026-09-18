@@ -5,7 +5,8 @@ const stations = [
 		country: 'Türkiye',
 		url: 'https://dygedge2.radyotvonline.net/kralfm/playlist.m3u8',
 		category: 'Turkish arabesque',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/kral-fm.jpg'
 	},
 	{
 		name: 'Kral Pop',
@@ -13,7 +14,8 @@ const stations = [
 		country: 'Türkiye',
 		url: 'https://dygedge.radyotvonline.net/kralpop/playlist.m3u8',
 		category: 'Turkish pop',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/kral-pop.jpg'
 	},
 	{
 		name: 'Power Türk FM',
@@ -21,7 +23,8 @@ const stations = [
 		country: 'Türkiye',
 		url: 'https://live.powerapp.com.tr/powerturk/abr/playlist.m3u8',
 		category: 'Turkish pop',
-		quality: '256kbps'
+		quality: '256kbps',
+		cover: './coverarts/power-turk-fm.jpg'
 	},
 	{
 		name: 'America\'s Country',
@@ -29,7 +32,8 @@ const stations = [
 		country: 'United States',
 		url: 'https://ais-sa2.cdnstream1.com/1976_128.mp3',
 		category: 'Country',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/americas-country.jpg'
 	},
 	{
 		name: 'WLTW 106.7 Lite FM',
@@ -37,7 +41,8 @@ const stations = [
 		country: 'United States',
 		url: 'https://stream.revma.ihrhls.com/zc1477/hls.m3u8',
 		category: 'Soft adult contemporary',
-		quality: '256kbps'
+		quality: '256kbps',
+		cover: './coverarts/wltw-106-7-lite-fm.jpg'
 	},
 	{
 		name: 'BBC World Service',
@@ -45,7 +50,8 @@ const stations = [
 		country: 'United Kingdom',
 		url: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',
 		category: 'News',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/bbc-world-service.jpg'
 	},
 	{
 		name: 'BBC Radio 1',
@@ -53,7 +59,8 @@ const stations = [
 		country: 'United Kingdom',
 		url: 'https://a.files.bbci.co.uk/ms6/live/3441A116-B12E-4D2F-ACA8-C1984642FA4B/audio/simulcast/hls/nonuk/audio_syndication_low_sbr_v1/cfs/bbc_radio_one.m3u8',
 		category: 'Contemporary hits',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/bbc-radio-1.jpg'
 	},
 	{
 		name: 'BBC Radio 2',
@@ -61,7 +68,8 @@ const stations = [
 		country: 'United Kingdom',
 		url: 'https://a.files.bbci.co.uk/ms6/live/3441A116-B12E-4D2F-ACA8-C1984642FA4B/audio/simulcast/hls/nonuk/audio_syndication_low_sbr_v1/aks/bbc_radio_two.m3u8',
 		category: 'Adult contemporary',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/bbc-radio-2.jpg'
 	},
 	{
 		name: 'Heart FM',
@@ -69,7 +77,8 @@ const stations = [
 		country: 'United Kingdom',
 		url: 'https://media-ice.musicradio.com/HeartLondonMP3',
 		category: 'Adult contemporary',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/heart-fm.jpg'
 	},
 	{
 		name: 'WSM 650 AM',
@@ -77,7 +86,8 @@ const stations = [
 		country: 'United States',
 		url: 'https://ais-sa8.cdnstream1.com/3666_64.mp3',
 		category: 'Classic country',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/wsm-650-am.jpg'
 	},
 	{
 		name: 'WNYC 93.9 FM',
@@ -85,7 +95,8 @@ const stations = [
 		country: 'United States',
 		url: 'https://fm939.wnyc.org/wnycfm-web',
 		category: 'Public radio',
-		quality: '256kbps'
+		quality: '256kbps',
+		cover: './coverarts/wnyc-93-9-fm.jpg'
 	},
 	{
 		name: 'France Inter',
@@ -93,7 +104,8 @@ const stations = [
 		country: 'France',
 		url: 'https://icecast.radiofrance.fr/franceinter-midfi.mp3',
 		category: 'Public generalist',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/france-inter.jpg'
 	},
 	{
 		name: 'Deutschlandfunk',
@@ -101,7 +113,8 @@ const stations = [
 		country: 'Germany',
 		url: 'https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3?aggregator=radio-de',
 		category: 'News',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/deutschlandfunk.jpg'
 	},
 	{
 		name: 'Xezer 103 FM',
@@ -109,6 +122,7 @@ const stations = [
 		country: 'Azerbaijan',
 		url: 'https://s40.myradiostream.com/22546/listen.mp3',
 		category: 'Pop / dance',
-		quality: '128kbps'
+		quality: '128kbps',
+		cover: './coverarts/xezer-103-fm.jpg'
 	}
 ];

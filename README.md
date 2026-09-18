@@ -4,7 +4,7 @@ An easy way to listen to good radio stations.
 
 # Live
 
-Link: [https://arazgholami.github.io/wave/](https://arazgholami.github.io/wave/)
+Link: [https://arazgray.github.io/wave/](https://arazgray.github.io/wave/)
 
 # Contributing
 

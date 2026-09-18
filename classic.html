@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Wave</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&family=Oswald:wght@300;400;600&display=swap');
+
+:root {
+  --chassis: #2a2016;
+  --chassis-light: #3a2f1e;
+  --chassis-mid: #231c11;
+  --leather: #1a1208;
+  --cream: #f5eed8;
+  --amber: #ffb833;
+  --amber-dim: #c87a00;
+  --amber-glow: #ff9900;
+  --amber-dark: #7a4a00;
+  --green-led: #39ff14;
+  --red-led: #ff2244;
+  --chrome: linear-gradient(135deg, #d4d0c8 0%, #f8f5ee 30%, #b8b4a8 60%, #e8e4dc 80%, #c0bbb0 100%);
+  --chrome-ring: linear-gradient(135deg, #888 0%, #ccc 30%, #666 60%, #bbb 80%, #777 100%);
+  --speaker-mesh: #1a1208;
+  --knob-dark: #1a1208;
+  --knob-mid: #2d2416;
+  --knob-light: #4a3c22;
+  --inset: inset 0 2px 8px rgba(0,0,0,0.7), inset 0 1px 2px rgba(0,0,0,0.5);
+  --raise: 0 2px 6px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
+  --raise-sm: 0 1px 3px rgba(0,0,0,0.5), 0 1px 1px rgba(0,0,0,0.3);
+  --dial-font: 'Share Tech Mono', monospace;
+  --label-font: 'Oswald', sans-serif;
+  --display-font: 'Special Elite', cursive;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: #0f0c07;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.4;
+}
+
+/* ─── RADIO CHASSIS ─── */
+.radio {
+  width: min(96vw, 780px);
+  max-height: 98dvh;
+  background: linear-gradient(160deg, #3a2f1e 0%, #2a2016 40%, #1e1810 100%);
+  border-radius: 18px 18px 22px 22px;
+  box-shadow:
+    0 0 0 1px #0a0805,
+    0 4px 0 #111,
+    0 8px 32px rgba(0,0,0,0.9),
+    0 24px 60px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Leather texture */
+.radio::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.05) 3px, rgba(0,0,0,0.05) 4px);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Top chrome strip */
+.radio::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #555 0%, #ccc 20%, #ddd 50%, #bbb 80%, #555 100%);
+  border-radius: 18px 18px 0 0;
+}
+
+/* ─── BRAND BAR ─── */
+.brand-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 8px;
+  position: relative;
+}
+
+.brand-name {
+  font-family: var(--display-font);
+  font-size: 1.5rem;
+  color: var(--amber);
+  text-shadow: 0 0 12px rgba(255,184,51,0.6), 0 1px 0 rgba(0,0,0,0.8);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.brand-tagline {
+  font-family: var(--label-font);
+  font-size: 0.6rem;
+  color: rgba(255,184,51,0.45);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Power LED */
+.power-led {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #222;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+  transition: all 0.3s;
+  position: relative;
+}
+.power-led.on {
+  background: var(--green-led);
+  box-shadow: 0 0 6px var(--green-led), 0 0 12px rgba(57,255,20,0.4), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+.power-led.loading {
+  background: var(--amber);
+  animation: ledPulse 0.6s ease-in-out infinite alternate;
+  box-shadow: 0 0 6px var(--amber), 0 0 12px rgba(255,184,51,0.5);
+}
+@keyframes ledPulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+.led-group { display: flex; align-items: center; gap: 10px; }
+.led-label {
+  font-family: var(--label-font);
+  font-size: 0.6rem;
+  color: rgba(255,184,51,0.4);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ─── MAIN DISPLAY WINDOW ─── */
+.display-window {
+  margin: 0 16px 12px;
+  background: linear-gradient(180deg, #0d0a04 0%, #1a1408 50%, #0a0802 100%);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow:
+    var(--inset),
+    0 0 0 1px #0a0805,
+    inset 0 0 40px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.display-window::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255,184,51,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glass reflection */
+.display-window::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px; right: 60%;
+  height: 35%;
+  border-radius: 6px 0 0 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.display-inner {
+  background: #0f0c04;
+  border-radius: 5px;
+  padding: 10px 14px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline effect */
+.display-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+.station-display-name {
+  font-family: var(--display-font);
+  font-size: 1.4rem;
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(255,184,51,0.8), 0 0 20px rgba(255,184,51,0.3);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.station-display-meta {
+  font-family: var(--dial-font);
+  font-size: 0.7rem;
+  color: var(--amber-dim);
+  text-shadow: 0 0 6px rgba(200,122,0,0.5);
+  margin-top: 4px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.station-display-desc {
+  font-family: var(--dial-font);
+  font-size: 0.65rem;
+  color: rgba(200,140,0,0.5);
+  margin-top: 6px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* VU meter bars */
+.vu-meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 22px;
+  margin-top: 8px;
+}
+.vu-bar {
+  width: 4px;
+  border-radius: 1px;
+  background: var(--amber-dark);
+  transition: height 0.08s ease;
+  min-height: 2px;
+}
+.vu-bar.active {
+  background: var(--amber);
+  box-shadow: 0 0 4px rgba(255,184,51,0.6);
+}
+.vu-bar.peak { background: var(--red-led); box-shadow: 0 0 4px rgba(255,34,68,0.6); }
+
+/* ─── FREQUENCY DIAL STRIP ─── */
+.dial-strip {
+  margin: 0 16px 10px;
+  background: linear-gradient(180deg, #f5eed8 0%, #ede5c5 40%, #d4c99a 100%);
+  border-radius: 5px;
+  padding: 6px 10px;
+  box-shadow: var(--inset), 0 0 0 1px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.dial-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 5px);
+  pointer-events: none;
+}
+
+.dial-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--label-font);
+  font-size: 0.55rem;
+  color: #5a4a2a;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.dial-needle {
+  width: 2px;
+  height: 14px;
+  background: linear-gradient(180deg, #cc2200, #ff4422);
+  margin: 2px auto 0;
+  border-radius: 1px;
+  box-shadow: 0 0 4px rgba(204,34,0,0.6);
+  position: relative;
+  z-index: 2;
+  transition: margin-left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── COUNTRY TABS ─── */
+.country-section {
+  margin: 0 16px 10px;
+}
+
+.section-label-small {
+  font-family: var(--label-font);
+  font-size: 0.55rem;
+  color: rgba(255,184,51,0.35);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  padding-left: 2px;
+}
+
+.country-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.country-scroll::-webkit-scrollbar { display: none; }
+
+.country-tabs {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.country-btn {
+  font-family: var(--label-font);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+  background: linear-gradient(180deg, #3a2f1e 0%, #2a2016 100%);
+  color: rgba(255,184,51,0.45);
+  box-shadow: var(--raise-sm), inset 0 1px 0 rgba(255,255,255,0.06);
+  min-height: unset;
+  position: relative;
+  top: 0;
+}
+
+.country-btn:hover {
+  color: rgba(255,184,51,0.8);
+  background: linear-gradient(180deg, #4a3c22 0%, #3a2f1e 100%);
+}
+
+.country-btn.selected {
+  background: linear-gradient(180deg, #1a1208 0%, #231c11 100%);
+  color: var(--amber);
+  box-shadow: var(--inset), inset 0 0 8px rgba(255,184,51,0.1);
+  top: 1px;
+  text-shadow: 0 0 8px rgba(255,184,51,0.5);
+}
+
+/* ─── STATION LIST ─── */
+.stations-section {
+  margin: 0 16px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stations-scroll {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,184,51,0.2) transparent;
+}
+
+.stations-scroll::-webkit-scrollbar { width: 4px; }
+.stations-scroll::-webkit-scrollbar-track { background: transparent; }
+.stations-scroll::-webkit-scrollbar-thumb { background: rgba(255,184,51,0.2); border-radius: 2px; }
+
+.station-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.station-item {
+  background: linear-gradient(180deg, #3a2f1e 0%, #2d2416 100%);
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.4);
+  box-shadow: var(--raise-sm), inset 0 1px 0 rgba(255,255,255,0.05);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  transition: all 0.1s ease;
+  position: relative;
+  top: 0;
+}
+
+.station-item:hover {
+  background: linear-gradient(180deg, #4a3c22 0%, #3a2f1e 100%);
+  border-color: rgba(255,184,51,0.1);
+}
+
+.station-item.selected {
+  background: linear-gradient(180deg, #1e1a0e 0%, #15120a 100%);
+  border-color: rgba(255,184,51,0.25);
+  box-shadow: var(--inset), 0 0 12px rgba(255,184,51,0.05), inset 0 0 20px rgba(255,184,51,0.03);
+  top: 1px;
+}
+
+.station-item-name {
+  font-family: var(--label-font);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: rgba(245,238,216,0.75);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.station-item.selected .station-item-name {
+  color: var(--amber);
+  text-shadow: 0 0 8px rgba(255,184,51,0.4);
+}
+
+.station-item-meta {
+  font-family: var(--dial-font);
+  font-size: 0.6rem;
+  color: rgba(200,160,80,0.4);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+.station-item.selected .station-item-meta {
+  color: rgba(255,184,51,0.5);
+}
+
+/* Mini equalizer dots */
+.eq-dots {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.station-item.playing .eq-dots { opacity: 1; }
+
+.eq-dot {
+  width: 3px;
+  background: var(--amber);
+  border-radius: 1px;
+  box-shadow: 0 0 3px rgba(255,184,51,0.5);
+}
+
+.no-stations {
+  font-family: var(--dial-font);
+  font-size: 0.75rem;
+  color: rgba(255,184,51,0.25);
+  text-align: center;
+  padding: 20px 0;
+  letter-spacing: 2px;
+}
+
+/* ─── BOTTOM CONTROLS ─── */
+.controls-panel {
+  margin: 10px 16px 16px;
+  background: linear-gradient(180deg, #231c11 0%, #1a1208 100%);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: var(--inset), 0 0 0 1px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Speaker grille */
+.speaker-grille {
+  display: grid;
+  grid-template-columns: repeat(8, 6px);
+  grid-template-rows: repeat(5, 6px);
+  gap: 3px;
+  padding: 6px;
+  background: linear-gradient(180deg, #0d0a04 0%, #1a1208 100%);
+  border-radius: 5px;
+  box-shadow: var(--inset);
+  flex-shrink: 0;
+}
+
+.grille-hole {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #080604;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* Control buttons */
+.control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.ctrl-btn {
+  font-family: var(--label-font);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.08s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: unset;
+  color: var(--cream);
+  padding: 0;
+}
+
+.ctrl-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ctrl-btn-prev,
+.ctrl-btn-next {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--knob-light) 0%, var(--knob-mid) 40%, var(--knob-dark) 100%);
+  box-shadow: var(--raise), inset 0 1px 0 rgba(255,255,255,0.08);
+  color: rgba(245,238,216,0.6);
+  font-size: 0.9rem;
+  top: 0;
+  align-items: unset;
+  justify-content: unset;
+  padding: 8px 0 0 10px;
+  font-size: 12px;
+}
+
+.ctrl-btn-prev:not(:disabled):hover,
+.ctrl-btn-next:not(:disabled):hover {
+  background: linear-gradient(135deg, #5a4c28 0%, #3a2f1e 40%, #1a1208 100%);
+  color: var(--cream);
+}
+
+.ctrl-btn-prev:not(:disabled):active,
+.ctrl-btn-next:not(:disabled):active {
+  box-shadow: var(--inset);
+  top: 1px;
+}
+
+.ctrl-btn-play {
+  width: 54px;
+  height: 54px;
+  background: radial-gradient(circle at 40% 35%, #8b1a1a, #5c0f0f 50%, #3a0808 100%);
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.7),
+    0 1px 3px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,100,100,0.15),
+    inset 0 -2px 4px rgba(0,0,0,0.5);
+  color: rgba(255,200,200,0.9);
+  font-size: 1rem;
+  border-radius: 50%;
+  top: 0;
+  align-items: unset;
+  justify-content: unset;
+  padding: 0px 0 0 18px;
+  font-size: 28px;
+}
+
+.ctrl-btn-play:not(:disabled):hover {
+  background: radial-gradient(circle at 40% 35%, #a01e1e, #6e1212 50%, #4a1010 100%);
+}
+
+.ctrl-btn-play:not(:disabled):active {
+  box-shadow: var(--inset), inset 0 0 10px rgba(0,0,0,0.5);
+  top: 2px;
+}
+
+.ctrl-btn-play.playing {
+  background: radial-gradient(circle at 40% 35%, #a01a1a, #6e0f0f 50%, #3a0808 100%);
+  box-shadow:
+    0 0 12px rgba(200,30,30,0.3),
+    0 3px 8px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,100,100,0.15);
+  padding: 2px 0 0 11px;
+  font-size: 27px;
+}
+
+.ctrl-btn-play.loading {
+  animation: playPulse 0.8s ease-in-out infinite;
+  padding: 2px 0 0 11px;
+  font-size: 27px;
+}
+
+@keyframes playPulse {
+  0%, 100% { box-shadow: 0 3px 8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,100,100,0.15); }
+  50% { box-shadow: 0 0 16px rgba(255,100,30,0.4), 0 3px 8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,100,100,0.15); }
+}
+
+/* Volume knob area */
+.knob-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.knob-label {
+  font-family: var(--label-font);
+  font-size: 0.5rem;
+  color: rgba(255,184,51,0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.knob {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--knob-light), var(--knob-mid) 50%, var(--knob-dark) 100%);
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.7),
+    0 1px 3px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -2px 4px rgba(0,0,0,0.4);
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.knob:active { cursor: grabbing; }
+
+/* Knob indicator line */
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 2px;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(255,184,51,0.8), rgba(255,184,51,0.2));
+  border-radius: 1px;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+}
+
+/* Knob grip lines */
+.knob::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255,255,255,0.03) 0deg 6deg, transparent 6deg 18deg);
+}
+
+/* ─── TICKER / MARQUEE for station name ─── */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-wrap {
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee-inner {
+  display: inline-flex;
+  gap: 60px;
+  white-space: nowrap;
+}
+
+.marquee-inner.animate {
+  animation: marquee 12s linear infinite;
+}
+
+/* ─── SAFE AREA BOTTOM ─── */
+.safe-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 520px) {
+  .radio { border-radius: 12px 12px 16px 16px; }
+  .brand-name { font-size: 1.2rem; }
+  .station-display-name { font-size: 1.1rem; }
+  .ctrl-btn-play { width: 48px; height: 48px; }
+  .ctrl-btn-prev, .ctrl-btn-next { width: 34px; height: 34px; }
+  .knob { width: 34px; height: 34px; }
+  .speaker-grille { grid-template-columns: repeat(6, 6px); }
+}
+
+/* Focus visible */
+.country-btn:focus-visible,
+.ctrl-btn:focus-visible,
+.station-item:focus-visible {
+  outline: 2px solid rgba(255,184,51,0.6);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="radio" role="application" aria-label="Wave Radio">
+
+  <!-- Brand bar -->
+  <div class="brand-bar">
+    <div>
+      <div class="brand-name">Wave</div>
+      <div class="brand-tagline">Good Radio · Simple</div>
+    </div>
+    <div class="led-group">
+      <div class="led-label">Power</div>
+      <div class="power-led" id="powerLed" aria-label="Power indicator"></div>
+    </div>
+  </div>
+
+  <!-- Display window -->
+  <div class="display-window">
+    <div class="display-inner">
+      <div class="marquee-wrap">
+        <div class="marquee-inner" id="displayNameWrap">
+          <div class="station-display-name" id="displayName">— WAVE RADIO —</div>
+        </div>
+      </div>
+      <div class="station-display-meta" id="displayMeta">Select a station to begin</div>
+      <div class="station-display-desc" id="displayDesc"></div>
+      <!-- VU meter -->
+      <div class="vu-meter" id="vuMeter" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <!-- Frequency dial strip -->
+  <div class="dial-strip" aria-hidden="true">
+    <div class="dial-numbers">
+      <span>AM</span><span>531</span><span>693</span><span>855</span><span>FM</span><span>88</span><span>96</span><span>104</span><span>108</span>
+    </div>
+    <div class="dial-needle" id="dialNeedle"></div>
+  </div>
+
+  <!-- Country selector -->
+  <div class="country-section">
+    <div class="section-label-small">Region</div>
+    <div class="country-scroll">
+      <div class="country-tabs" id="countryTabs" role="tablist" aria-label="Select country"></div>
+    </div>
+  </div>
+
+  <!-- Station list -->
+  <div class="stations-section">
+    <div class="section-label-small" id="stationSectionLabel">Stations</div>
+    <div class="stations-scroll">
+      <ul class="station-list" id="stationList" role="listbox" aria-label="Radio stations"></ul>
+      <p class="no-stations" id="noStations" style="display:none">— NO SIGNAL —</p>
+    </div>
+  </div>
+
+  <!-- Controls panel -->
+  <div class="controls-panel">
+
+    <!-- Speaker grille -->
+    <div class="speaker-grille" aria-hidden="true" id="speakerGrille"></div>
+
+    <!-- Buttons -->
+    <div class="control-buttons">
+      <button class="ctrl-btn ctrl-btn-prev" id="prevBtn" type="button" disabled aria-label="Previous station">&#9664;&#9664;</button>
+      <button class="ctrl-btn ctrl-btn-play" id="playBtn" type="button" disabled aria-label="Play / Stop">&#9654;</button>
+      <button class="ctrl-btn ctrl-btn-next" id="nextBtn" type="button" disabled aria-label="Next station">&#9654;&#9654;</button>
+    </div>
+
+    <!-- Volume knob -->
+    <div class="knob-group" aria-hidden="true">
+      <div class="knob" id="volKnob" title="Volume"></div>
+      <div class="knob-label">Vol</div>
+    </div>
+
+  </div>
+
+  <div class="safe-bottom"></div>
+</div>
+
+<audio id="audioPlayer" style="display:none"></audio>
+<script src="./hls.js"></script>
+<script src="./stations.js"></script>
+<script>
+/* ── State ── */
+const audio = document.getElementById('audioPlayer');
+const storageKey = 'wave-last-station';
+
+let currentCountry = null;
+let currentStations = [];
+let currentStationIndex = -1;
+let currentStation = null;
+let currentUrl = null;
+let isLoading = false;
+let currentHls = null;
+let vuInterval = null;
+let volDeg = 135; // knob rotation in degrees
+
+/* ── DOM refs ── */
+const powerLed      = document.getElementById('powerLed');
+const displayName   = document.getElementById('displayName');
+const displayNameWrap = document.getElementById('displayNameWrap');
+const displayMeta   = document.getElementById('displayMeta');
+const displayDesc   = document.getElementById('displayDesc');
+const vuMeter       = document.getElementById('vuMeter');
+const dialNeedle    = document.getElementById('dialNeedle');
+const countryTabs   = document.getElementById('countryTabs');
+const stationList   = document.getElementById('stationList');
+const noStations    = document.getElementById('noStations');
+const stationSectionLabel = document.getElementById('stationSectionLabel');
+const prevBtn       = document.getElementById('prevBtn');
+const playBtn       = document.getElementById('playBtn');
+const nextBtn       = document.getElementById('nextBtn');
+const volKnob       = document.getElementById('volKnob');
+
+/* ── Build speaker grille ── */
+(function buildGrille() {
+  const g = document.getElementById('speakerGrille');
+  for (let i = 0; i < 40; i++) {
+    const d = document.createElement('div');
+    d.className = 'grille-hole';
+    g.appendChild(d);
+  }
+})();
+
+/* ── Build VU meter ── */
+const vuBars = [];
+(function buildVU() {
+  const heights = [6, 10, 14, 18, 22, 18, 14, 10, 14, 18, 22, 18, 14, 10, 6];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'vu-bar';
+    bar.style.height = '2px';
+    vuMeter.appendChild(bar);
+    vuBars.push({ el: bar, base: h });
+  });
+})();
+
+function animateVU(active) {
+  if (vuInterval) clearInterval(vuInterval);
+  if (!active) {
+    vuBars.forEach(b => { b.el.style.height = '2px'; b.el.className = 'vu-bar'; });
+    return;
+  }
+  vuInterval = setInterval(() => {
+    vuBars.forEach((b, i) => {
+      const r = 0.4 + Math.random() * 0.6;
+      const h = Math.max(2, Math.round(b.base * r));
+      b.el.style.height = h + 'px';
+      b.el.className = 'vu-bar' + (h > b.base * 0.85 ? ' peak' : h > 4 ? ' active' : '');
+    });
+  }, 80);
+}
+
+/* ── Dial needle position ── */
+function setNeedle(index, total) {
+  if (total <= 0) { dialNeedle.style.marginLeft = '0'; return; }
+  const strip = document.querySelector('.dial-strip');
+  const w = strip ? strip.offsetWidth - 20 : 300;
+  const pct = total > 1 ? index / (total - 1) : 0.5;
+  dialNeedle.style.marginLeft = Math.round(pct * w) + 'px';
+}
+
+/* ── Volume knob ── */
+(function setupKnob() {
+  let dragging = false, startY = 0, startDeg = volDeg;
+
+  function applyVol(deg) {
+    volDeg = Math.max(0, Math.min(270, deg));
+    volKnob.style.transform = `rotate(${volDeg - 135}deg)`;
+    const vol = volDeg / 270;
+    audio.volume = vol;
+  }
+
+  applyVol(200); // start ~75%
+
+  volKnob.addEventListener('mousedown', e => {
+    dragging = true; startY = e.clientY; startDeg = volDeg;
+    e.preventDefault();
+  });
+  volKnob.addEventListener('touchstart', e => {
+    dragging = true; startY = e.touches[0].clientY; startDeg = volDeg;
+  }, { passive: true });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    applyVol(startDeg - (e.clientY - startY) * 0.8);
+  });
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    applyVol(startDeg - (e.touches[0].clientY - startY) * 0.8);
+  }, { passive: true });
+  document.addEventListener('mouseup',  () => { dragging = false; });
+  document.addEventListener('touchend', () => { dragging = false; });
+})();
+
+/* ── Countries ── */
+const countries = [...new Set(stations.map(s => s.country))];
+
+function renderCountries() {
+  countries.forEach(country => {
+    const btn = document.createElement('button');
+    btn.className = 'country-btn';
+    btn.textContent = country;
+    btn.type = 'button';
+    btn.role = 'tab';
+    btn.setAttribute('aria-selected', 'false');
+    btn.addEventListener('click', () => selectCountry(country));
+    countryTabs.appendChild(btn);
+  });
+}
+
+function selectCountry(country) {
+  const keepPlayer = currentStation && (currentUrl || isLoading);
+  currentCountry = country;
+  currentStations = stations.filter(s => s.country === country);
+  currentStationIndex = keepPlayer ? currentStations.findIndex(s => s.url === currentStation.url) : -1;
+
+  highlightCountry(country);
+  renderStationList(currentStations);
+  highlightStation(currentStationIndex);
+  setNeedle(currentStationIndex >= 0 ? currentStationIndex : 0, currentStations.length);
+
+  stationSectionLabel.textContent = country;
+  if (!keepPlayer) resetPlayer('Choose a station.');
+}
+
+function highlightCountry(country) {
+  countryTabs.querySelectorAll('.country-btn').forEach(btn => {
+    const sel = btn.textContent === country;
+    btn.classList.toggle('selected', sel);
+    btn.setAttribute('aria-selected', sel ? 'true' : 'false');
+    if (sel) btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  });
+}
+
+/* ── Stations ── */
+function renderStationList(list) {
+  stationList.innerHTML = '';
+  noStations.style.display = list.length ? 'none' : 'block';
+
+  list.forEach((station, i) => {
+    const li = document.createElement('li');
+    li.className = 'station-item';
+    li.role = 'option';
+    li.tabIndex = 0;
+    li.dataset.index = i;
+    li.setAttribute('aria-selected', 'false');
+
+    const info = document.createElement('div');
+
+    const name = document.createElement('div');
+    name.className = 'station-item-name';
+    name.textContent = station.name;
+
+    const meta = document.createElement('div');
+    meta.className = 'station-item-meta';
+    meta.textContent = station.category + ' · ' + station.quality;
+
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    // EQ dots
+    const eq = document.createElement('div');
+    eq.className = 'eq-dots';
+    eq.setAttribute('aria-hidden', 'true');
+    for (let j = 0; j < 4; j++) {
+      const d = document.createElement('div');
+      d.className = 'eq-dot';
+      d.style.height = [6, 10, 8, 12][j] + 'px';
+      eq.appendChild(d);
+    }
+
+    li.appendChild(info);
+    li.appendChild(eq);
+
+    li.addEventListener('click', () => selectStation(i, true));
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectStation(i, true); }
+    });
+
+    stationList.appendChild(li);
+  });
+}
+
+function selectStation(index, autoplay) {
+  if (!currentStations[index]) return;
+  const wasPlaying = !!currentUrl && !audio.paused;
+  const station = currentStations[index];
+  currentStationIndex = index;
+  currentStation = station;
+
+  highlightStation(index);
+  setPlayerStation(station);
+  setControlsEnabled(true);
+  setNeedle(index, currentStations.length);
+  rememberStation(station);
+
+  if (autoplay || wasPlaying) playStation(station);
+}
+
+function highlightStation(index) {
+  stationList.querySelectorAll('.station-item').forEach(el => {
+    const i = Number(el.dataset.index);
+    const sel = i === index;
+    const playing = sel && currentUrl && !audio.paused;
+    el.classList.toggle('selected', sel);
+    el.classList.toggle('playing', playing);
+    el.setAttribute('aria-selected', sel ? 'true' : 'false');
+    if (sel) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+/* ── Player display ── */
+function setPlayerStation(station) {
+  const text = station.name;
+  displayName.textContent = text;
+
+  // marquee if long
+  const maxChars = 18;
+  if (text.length > maxChars) {
+    displayNameWrap.innerHTML = `<div class="station-display-name">${text}&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;${text}&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;</div>`;
+    displayNameWrap.classList.add('animate');
+  } else {
+    displayNameWrap.innerHTML = `<div class="station-display-name">${text}</div>`;
+    displayNameWrap.classList.remove('animate');
+  }
+
+  displayMeta.textContent = station.category + ' · ' + station.quality + ' · ' + station.country;
+  displayDesc.textContent = station.description;
+
+  const playing = currentUrl === station.url && !audio.paused;
+  playBtn.innerHTML = playing ? '&#9646;&#9646;' : '&#9654;';
+  playBtn.classList.toggle('playing', playing);
+  playBtn.setAttribute('aria-label', playing ? 'Stop' : 'Play');
+
+  document.title = station.name + ' · Wave';
+}
+
+function resetPlayer(msg) {
+  stopAudio();
+  currentStation = null;
+
+  displayNameWrap.innerHTML = '<div class="station-display-name">— WAVE RADIO —</div>';
+  displayNameWrap.classList.remove('animate');
+  displayMeta.textContent = msg || 'Choose a country, then choose a station.';
+  displayDesc.textContent = '';
+  playBtn.innerHTML = '&#9654;';
+  playBtn.classList.remove('playing', 'loading');
+  setControlsEnabled(false);
+  document.title = 'Wave';
+}
+
+function setControlsEnabled(on) {
+  prevBtn.disabled = !on;
+  playBtn.disabled = !on;
+  nextBtn.disabled = !on;
+}
+
+/* ── Audio ── */
+function destroyHls() {
+  if (currentHls) { currentHls.destroy(); currentHls = null; }
+  if (audio.hls)   { audio.hls.destroy();  audio.hls = null;  }
+}
+
+function stopAudio() {
+  isLoading = false;
+  destroyHls();
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  currentUrl = null;
+  powerLed.className = 'power-led';
+  playBtn.innerHTML = '&#9654;';
+  playBtn.classList.remove('playing', 'loading');
+  playBtn.setAttribute('aria-label', 'Play');
+  animateVU(false);
+  highlightStation(currentStationIndex);
+}
+
+function togglePlay() {
+  const station = currentStations[currentStationIndex] || currentStation;
+  if (!station || isLoading) return;
+  if (currentUrl === station.url && !audio.paused) { stopAudio(); return; }
+  playStation(station);
+}
+
+function playStation(station) {
+  if (!station) return;
+  stopAudio();
+  currentStation = station;
+  isLoading = true;
+  currentUrl = station.url;
+
+  powerLed.className = 'power-led loading';
+  playBtn.innerHTML = '&#8987;';
+  playBtn.classList.add('loading');
+  playBtn.setAttribute('aria-label', 'Loading');
+
+  const onSuccess = () => {
+    isLoading = false;
+    powerLed.className = 'power-led on';
+    playBtn.innerHTML = '&#9646;&#9646;';
+    playBtn.classList.remove('loading');
+    playBtn.classList.add('playing');
+    playBtn.setAttribute('aria-label', 'Stop');
+    animateVU(true);
+    highlightStation(currentStationIndex);
+    document.title = station.name + ' · Wave';
+  };
+
+  const onError = () => {
+    isLoading = false;
+    stopAudio();
+    displayMeta.textContent = 'Signal lost — try again';
+    powerLed.className = 'power-led';
+  };
+
+  const updateMediaSession = () => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: station.name,
+        artist: station.category,
+        album: station.country,
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', playNextStation);
+      navigator.mediaSession.setActionHandler('previoustrack', playPreviousStation);
+      navigator.mediaSession.setActionHandler('play', () => playStation(station));
+      navigator.mediaSession.setActionHandler('pause', stopAudio);
+    }
+  };
+  updateMediaSession();
+
+  if (station.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+    currentHls = new Hls();
+    audio.hls = currentHls;
+    currentHls.loadSource(station.url);
+    currentHls.attachMedia(audio);
+    currentHls.on(Hls.Events.MANIFEST_PARSED, () => audio.play().then(onSuccess).catch(onError));
+    currentHls.on(Hls.Events.ERROR, (e, d) => { if (d && d.fatal) onError(); });
+    return;
+  }
+  if (station.url.includes('.m3u8') && audio.canPlayType('application/vnd.apple.mpegurl')) {
+    audio.src = station.url;
+    audio.play().then(onSuccess).catch(onError);
+    return;
+  }
+  audio.src = station.url;
+  audio.play().then(onSuccess).catch(onError);
+}
+
+function moveStation(dir) {
+  if (!countries.length) return;
+  let ci = currentCountry ? countries.indexOf(currentCountry) : 0;
+  let ni = currentStationIndex < 0 ? (dir > 0 ? 0 : currentStations.length - 1) : currentStationIndex + dir;
+  let nc = currentCountry;
+  let ns = currentStations;
+
+  if (!ns.length) {
+    nc = countries[ci] || countries[0];
+    ns = stations.filter(s => s.country === nc);
+    ni = dir > 0 ? 0 : ns.length - 1;
+  }
+  if (ni >= ns.length) {
+    ci = (ci + 1) % countries.length;
+    nc = countries[ci]; ns = stations.filter(s => s.country === nc); ni = 0;
+  }
+  if (ni < 0) {
+    ci = (ci - 1 + countries.length) % countries.length;
+    nc = countries[ci]; ns = stations.filter(s => s.country === nc); ni = ns.length - 1;
+  }
+  currentCountry = nc; currentStations = ns;
+  highlightCountry(nc);
+  renderStationList(ns);
+  selectStation(ni, true);
+}
+
+function playNextStation()     { moveStation(1); }
+function playPreviousStation() { moveStation(-1); }
+
+/* ── Persistence ── */
+function rememberStation(station) {
+  try { localStorage.setItem(storageKey, JSON.stringify({ country: station.country, name: station.name })); } catch(e){}
+}
+function restoreLastStation() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    if (!saved || !saved.country || !countries.includes(saved.country)) return false;
+    selectCountry(saved.country);
+    const idx = currentStations.findIndex(s => s.name === saved.name);
+    if (idx >= 0) selectStation(idx, false);
+    return idx >= 0;
+  } catch(e) { return false; }
+}
+
+/* ── Events ── */
+playBtn.addEventListener('click', togglePlay);
+prevBtn.addEventListener('click', playPreviousStation);
+nextBtn.addEventListener('click', playNextStation);
+
+document.addEventListener('keydown', e => {
+  if (e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); playNextStation(); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); playPreviousStation(); }
+  if (e.key === ' ' && currentStation) { e.preventDefault(); togglePlay(); }
+});
+
+audio.addEventListener('ended', () => {
+  powerLed.className = 'power-led';
+  currentUrl = null;
+  playBtn.innerHTML = '&#9654;';
+  playBtn.classList.remove('playing');
+  animateVU(false);
+  highlightStation(currentStationIndex);
+});
+
+audio.addEventListener('error', () => { if (currentUrl) stopAudio(); });
+
+/* ── Init ── */
+renderCountries();
+if (countries.length && !restoreLastStation()) selectCountry(countries[0]);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
