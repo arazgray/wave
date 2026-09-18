@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<title>Wave Car</title>
+<style>
+:root {
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	font-size: 16px;
+	color: #fff;
+	background: #000;
+	--amber: #ffb833;
+	--amber-dim: rgba(255, 184, 51, 0.35);
+	--green: #39ff14;
+	--panel: #141417;
+	--line: #2a2a2e;
+	--muted: #9a9aa0;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	background: #000;
+	color: #fff;
+}
+
+body {
+	min-height: 100dvh;
+	overflow: hidden;
+}
+
+button {
+	font: inherit;
+	color: #fff;
+	background: var(--panel);
+	border: 2px solid var(--line);
+	border-radius: 18px;
+	cursor: pointer;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+button:focus-visible {
+	outline: 3px solid var(--amber);
+	outline-offset: 3px;
+}
+
+button:active {
+	transform: scale(0.98);
+}
+
+.car {
+	width: 100%;
+	max-width: 900px;
+	height: 100dvh;
+	margin: 0 auto;
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+	gap: 0.6rem;
+	padding: 0.8rem 0.9rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+	background: #000;
+}
+
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.brand {
+	font-size: 1.1rem;
+	font-weight: 800;
+	letter-spacing: 0.25em;
+}
+
+.brand span {
+	color: var(--amber);
+}
+
+.clock {
+	font-size: 1.6rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.05em;
+}
+
+.stage {
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 0.5rem;
+	background: var(--panel);
+	border: 2px solid var(--line);
+	border-radius: 22px;
+	padding: 1rem;
+	overflow: hidden;
+}
+
+.status {
+	font-size: 0.95rem;
+	font-weight: 800;
+	letter-spacing: 0.3em;
+	padding: 0.35rem 1rem;
+	border-radius: 999px;
+	border: 2px solid var(--line);
+	color: var(--muted);
+}
+
+.status.loading {
+	color: var(--amber);
+	border-color: var(--amber);
+	animation: pulse 0.9s ease-in-out infinite alternate;
+}
+
+.status.playing {
+	color: var(--green);
+	border-color: var(--green);
+}
+
+@keyframes pulse {
+	from { opacity: 0.55; }
+	to { opacity: 1; }
+}
+
+.station {
+	margin: 0;
+	font-size: clamp(2rem, 8vw, 3.4rem);
+	font-weight: 800;
+	line-height: 1.1;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.meta {
+	margin: 0;
+	font-size: clamp(1rem, 3.5vw, 1.25rem);
+	color: var(--muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+.controls {
+	display: grid;
+	grid-template-columns: 1fr 1.4fr 1fr;
+	gap: 0.6rem;
+}
+
+.controls button {
+	min-height: 104px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.15rem;
+}
+
+.controls .glyph {
+	font-size: 2.4rem;
+	line-height: 1;
+}
+
+.controls .lbl {
+	font-size: 0.85rem;
+	font-weight: 800;
+	letter-spacing: 0.2em;
+	color: var(--muted);
+}
+
+#playButton {
+	background: var(--amber);
+	border-color: var(--amber);
+	color: #000;
+}
+
+#playButton .lbl {
+	color: #000;
+}
+
+#playButton.playing {
+	background: #000;
+	color: var(--green);
+	border-color: var(--green);
+}
+
+#playButton.playing .lbl {
+	color: var(--green);
+}
+
+.presets {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.6rem;
+}
+
+.presets button {
+	min-height: 78px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.1rem;
+	padding: 0.4rem 0.5rem;
+}
+
+.presets button.active {
+	border-color: var(--amber);
+}
+
+.presets button.saved-flash {
+	border-color: var(--green);
+}
+
+.pnum {
+	font-size: 0.75rem;
+	font-weight: 800;
+	letter-spacing: 0.2em;
+	color: var(--amber);
+}
+
+.pname {
+	font-size: 1.02rem;
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+.pname.empty {
+	color: var(--muted);
+	font-weight: 400;
+	font-size: 0.85rem;
+}
+
+footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+}
+
+#voiceButton {
+	min-height: 56px;
+	padding: 0.5rem 1.1rem;
+	font-size: 0.85rem;
+	font-weight: 800;
+	letter-spacing: 0.15em;
+	border-radius: 999px;
+}
+
+#voiceButton.off {
+	color: var(--muted);
+}
+
+#position {
+	font-size: 1rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--muted);
+}
+
+.hint {
+	margin: 0;
+	text-align: center;
+	font-size: 0.8rem;
+	color: var(--muted);
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+	.car {
+		gap: 0.5rem;
+		padding-top: 0.5rem;
+	}
+
+	.stage {
+		padding: 0.5rem;
+		gap: 0.25rem;
+	}
+
+	.station {
+		font-size: clamp(1.6rem, 6vh, 2.2rem);
+	}
+
+	.controls button {
+		min-height: 84px;
+	}
+
+	.presets {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+
+	.presets button {
+		min-height: 64px;
+	}
+
+	.hint {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 1ms !important;
+		transition-duration: 1ms !important;
+	}
+}
+</style>
+</head>
+<body>
+<div class="car">
+	<header>
+		<div class="brand">WAVE <span>CAR</span></div>
+		<div class="clock" id="clock">--:--</div>
+	</header>
+
+	<main class="stage" aria-live="polite">
+		<div class="status" id="status">STOPPED</div>
+		<h1 class="station" id="stationName">Ready</h1>
+		<p class="meta" id="stationMeta">Pick a preset, or press play</p>
+	</main>
+
+	<div class="controls">
+		<button id="prevButton" type="button" aria-label="Previous station">
+			<span class="glyph" aria-hidden="true">&#9664;&#9664;</span>
+			<span class="lbl">PREV</span>
+		</button>
+		<button id="playButton" type="button" aria-label="Play or stop">
+			<span class="glyph" id="playGlyph" aria-hidden="true">&#9654;</span>
+			<span class="lbl" id="playLabel">PLAY</span>
+		</button>
+		<button id="nextButton" type="button" aria-label="Next station">
+			<span class="glyph" aria-hidden="true">&#9654;&#9654;</span>
+			<span class="lbl">NEXT</span>
+		</button>
+	</div>
+
+	<div class="presets" id="presets" aria-label="Preset stations"></div>
+	<p class="hint">Tap a preset to play &middot; hold a preset to save the current station</p>
+
+	<footer>
+		<button id="voiceButton" type="button" aria-label="Toggle spoken station names">VOICE ON</button>
+		<div id="position">&ndash; / &ndash;</div>
+	</footer>
+</div>
+
+<audio id="audioPlayer" style="display:none"></audio>
+<script src="./hls.js"></script>
+<script src="./stations.js"></script>
+<script>
+const audio = document.getElementById('audioPlayer');
+const statusEl = document.getElementById('status');
+const stationNameEl = document.getElementById('stationName');
+const stationMetaEl = document.getElementById('stationMeta');
+const playButton = document.getElementById('playButton');
+const playGlyph = document.getElementById('playGlyph');
+const playLabel = document.getElementById('playLabel');
+const prevButton = document.getElementById('prevButton');
+const nextButton = document.getElementById('nextButton');
+const presetsEl = document.getElementById('presets');
+const voiceButton = document.getElementById('voiceButton');
+const positionEl = document.getElementById('position');
+
+const storageKey = 'wave:lastStation';
+const presetsKey = 'wave:carPresets';
+const voiceKey = 'wave:carAnnounce';
+const PRESET_COUNT = 6;
+const DEFAULT_COVER_ART = './cover-art-placeholder.jpg';
+
+let currentIndex = -1;
+let currentStation = null;
+let currentUrl = null;
+let currentHls = null;
+let isLoading = false;
+let wakeLock = null;
+
+let presets = loadPresets();
+let voiceOn = loadVoice();
+
+// --- Clock ---
+function tickClock() {
+	const now = new Date();
+	const hh = String(now.getHours()).padStart(2, '0');
+	const mm = String(now.getMinutes()).padStart(2, '0');
+	const text = hh + ':' + mm;
+	if (document.getElementById('clock').textContent !== text) {
+		document.getElementById('clock').textContent = text;
+	}
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+// --- Status / now playing ---
+function setStatus(state) {
+	statusEl.classList.remove('loading', 'playing');
+	if (state === 'loading') {
+		statusEl.textContent = 'LOADING';
+		statusEl.classList.add('loading');
+	} else if (state === 'playing') {
+		statusEl.textContent = 'PLAYING';
+		statusEl.classList.add('playing');
+	} else {
+		statusEl.textContent = 'STOPPED';
+	}
+}
+
+function renderNowPlaying() {
+	if (!currentStation) {
+		stationNameEl.textContent = 'Ready';
+		stationMetaEl.textContent = 'Pick a preset, or press play';
+		positionEl.textContent = '– / ' + stations.length;
+		document.title = 'Wave Car';
+		return;
+	}
+
+	stationNameEl.textContent = currentStation.name;
+	stationMetaEl.textContent = currentStation.country + ' · ' + currentStation.category;
+	positionEl.textContent = (currentIndex + 1) + ' / ' + stations.length;
+	document.title = currentStation.name + ' · Wave Car';
+}
+
+function renderPlayButton() {
+	const playing = !!currentUrl && !audio.paused;
+	playGlyph.innerHTML = playing ? '&#9646;&#9646;' : '&#9654;';
+	playLabel.textContent = isLoading ? 'WAIT' : (playing ? 'STOP' : 'PLAY');
+	playButton.classList.toggle('playing', playing);
+	playButton.setAttribute('aria-label', playing ? 'Stop' : 'Play');
+}
+
+// --- Station selection ---
+function selectStation(index, autoplay) {
+	if (!stations[index]) return;
+
+	const station = stations[index];
+	const changed = !currentStation || currentStation.url !== station.url;
+	currentIndex = index;
+	currentStation = station;
+
+	renderNowPlaying();
+	renderPresets();
+	rememberStation(station);
+
+	if (autoplay) {
+		if (changed) announce(station.name);
+		playStation(station);
+	} else {
+		renderPlayButton();
+	}
+}
+
+function moveStation(direction) {
+	if (!stations.length) return;
+	const next = currentIndex < 0
+		? (direction > 0 ? 0 : stations.length - 1)
+		: (currentIndex + direction + stations.length) % stations.length;
+	selectStation(next, true);
+}
+
+function togglePlay() {
+	if (isLoading) return;
+
+	if (currentUrl && !audio.paused) {
+		stopAudio();
+		return;
+	}
+
+	if (currentStation) {
+		playStation(currentStation);
+		return;
+	}
+
+	selectStation(0, true);
+}
+
+// --- Audio (HLS with native fallback) ---
+function destroyHls() {
+	if (currentHls) {
+		currentHls.destroy();
+		currentHls = null;
+	}
+
+	if (audio.hls) {
+		audio.hls.destroy();
+		audio.hls = null;
+	}
+}
+
+function stopAudio() {
+	isLoading = false;
+	destroyHls();
+	audio.pause();
+	audio.removeAttribute('src');
+	audio.load();
+	currentUrl = null;
+	releaseWakeLock();
+	setStatus('stopped');
+	renderPlayButton();
+}
+
+function playStation(station) {
+	if (!station) return;
+
+	stopAudio();
+	isLoading = true;
+	currentUrl = station.url;
+	setStatus('loading');
+	renderPlayButton();
+	updateMediaSession(station);
+
+	const onPlaySuccess = () => {
+		isLoading = false;
+		setStatus('playing');
+		renderPlayButton();
+		requestWakeLock();
+	};
+
+	const onPlayError = () => {
+		isLoading = false;
+		stopAudio();
+	};
+
+	if (station.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+		currentHls = new Hls();
+		audio.hls = currentHls;
+		currentHls.loadSource(station.url);
+		currentHls.attachMedia(audio);
+		currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+			audio.play().then(onPlaySuccess).catch(onPlayError);
+		});
+		currentHls.on(Hls.Events.ERROR, (event, data) => {
+			if (data && data.fatal) onPlayError();
+		});
+		return;
+	}
+
+	if (station.url.includes('.m3u8') && audio.canPlayType('application/vnd.apple.mpegurl')) {
+		audio.src = station.url;
+		audio.play().then(onPlaySuccess).catch(onPlayError);
+		return;
+	}
+
+	audio.src = station.url;
+	audio.play().then(onPlaySuccess).catch(onPlayError);
+}
+
+// --- Media Session (lockscreen / steering-wheel keys) ---
+function resolveArtworkSrc(src) {
+	try {
+		return new URL(src, document.baseURI).href;
+	} catch (error) {
+		return src;
+	}
+}
+
+function getStationArtwork(station) {
+	const sizes = ['96x96', '128x128', '192x192', '512x512'];
+	const artwork = [];
+
+	if (station.cover) {
+		const stationSrc = resolveArtworkSrc(station.cover);
+		sizes.forEach(size => {
+			artwork.push({ src: stationSrc, sizes: size, type: 'image/jpeg' });
+		});
+	}
+
+	const defaultSrc = resolveArtworkSrc(DEFAULT_COVER_ART);
+	sizes.forEach(size => {
+		artwork.push({ src: defaultSrc, sizes: size, type: 'image/jpeg' });
+	});
+
+	return artwork;
+}
+
+function updateMediaSession(station) {
+	if ('mediaSession' in navigator) {
+		navigator.mediaSession.metadata = new MediaMetadata({
+			title: station.name,
+			artist: station.category,
+			album: station.country,
+			artwork: getStationArtwork(station)
+		});
+
+		navigator.mediaSession.setActionHandler('nexttrack', () => moveStation(1));
+		navigator.mediaSession.setActionHandler('previoustrack', () => moveStation(-1));
+		navigator.mediaSession.setActionHandler('play', () => {
+			if (currentStation) playStation(currentStation);
+		});
+		navigator.mediaSession.setActionHandler('pause', stopAudio);
+	}
+}
+
+// --- Presets: tap = play, hold = save current ---
+function loadPresets() {
+	try {
+		const saved = JSON.parse(localStorage.getItem(presetsKey) || 'null');
+		if (Array.isArray(saved)) {
+			return Array.from({ length: PRESET_COUNT }, (_, i) =>
+				typeof saved[i] === 'string' ? saved[i] : ''
+			);
+		}
+	} catch (error) {
+	}
+	return Array(PRESET_COUNT).fill('');
+}
+
+function savePresets() {
+	try {
+		localStorage.setItem(presetsKey, JSON.stringify(presets));
+	} catch (error) {
+	}
+}
+
+function findStationByName(name) {
+	return stations.findIndex(station => station.name === name);
+}
+
+function renderPresets() {
+	presetsEl.innerHTML = '';
+
+	presets.forEach((name, i) => {
+		const button = document.createElement('button');
+		button.type = 'button';
+
+		const num = document.createElement('span');
+		num.className = 'pnum';
+		num.textContent = String(i + 1);
+
+		const label = document.createElement('span');
+		const index = name ? findStationByName(name) : -1;
+		if (index >= 0) {
+			label.className = 'pname';
+			label.textContent = stations[index].name;
+			button.setAttribute('aria-label', 'Preset ' + (i + 1) + ': ' + stations[index].name);
+		} else {
+			label.className = 'pname empty';
+			label.textContent = 'Empty';
+			button.setAttribute('aria-label', 'Preset ' + (i + 1) + ': empty. Hold to save current station.');
+		}
+
+		if (currentStation && index >= 0 && stations[index].url === currentStation.url) {
+			button.classList.add('active');
+		}
+
+		button.appendChild(num);
+		button.appendChild(label);
+		attachPresetPress(button, i);
+		presetsEl.appendChild(button);
+	});
+}
+
+function attachPresetPress(button, slot) {
+	let holdTimer = null;
+	let held = false;
+
+	const cancel = () => {
+		if (holdTimer) {
+			clearTimeout(holdTimer);
+			holdTimer = null;
+		}
+	};
+
+	button.addEventListener('pointerdown', () => {
+		held = false;
+		cancel();
+		holdTimer = setTimeout(() => {
+			held = true;
+			holdTimer = null;
+			savePresetSlot(slot, button);
+		}, 650);
+	});
+
+	button.addEventListener('pointerup', () => {
+		const wasHold = held;
+		cancel();
+		held = false;
+		if (!wasHold) playPresetSlot(slot);
+	});
+
+	button.addEventListener('pointerleave', cancel);
+	button.addEventListener('pointercancel', cancel);
+
+	button.addEventListener('keydown', event => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			playPresetSlot(slot);
+		}
+	});
+
+	// Suppress the synthetic click after pointer handling (avoids double-play).
+	button.addEventListener('click', event => {
+		event.preventDefault();
+	});
+}
+
+function playPresetSlot(slot) {
+	const index = presets[slot] ? findStationByName(presets[slot]) : -1;
+	if (index >= 0) selectStation(index, true);
+}
+
+function savePresetSlot(slot, button) {
+	if (!currentStation) return;
+	presets[slot] = currentStation.name;
+	savePresets();
+	renderPresets();
+	announce('Saved to preset ' + (slot + 1));
+	try {
+		if (navigator.vibrate) navigator.vibrate(50);
+	} catch (error) {
+	}
+	if (button && button.isConnected) {
+		button.classList.add('saved-flash');
+		setTimeout(() => button.classList.remove('saved-flash'), 600);
+	}
+}
+
+// --- Spoken announcements ---
+function loadVoice() {
+	try {
+		const saved = localStorage.getItem(voiceKey);
+		return saved === null ? true : saved === '1';
+	} catch (error) {
+		return true;
+	}
+}
+
+function renderVoiceButton() {
+	voiceButton.textContent = voiceOn ? 'VOICE ON' : 'VOICE OFF';
+	voiceButton.classList.toggle('off', !voiceOn);
+}
+
+function announce(text) {
+	if (!voiceOn) return;
+	try {
+		if (!('speechSynthesis' in window)) return;
+		window.speechSynthesis.cancel();
+		window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+	} catch (error) {
+	}
+}
+
+voiceButton.addEventListener('click', () => {
+	voiceOn = !voiceOn;
+	try {
+		localStorage.setItem(voiceKey, voiceOn ? '1' : '0');
+	} catch (error) {
+	}
+	renderVoiceButton();
+	if (!voiceOn) {
+		try {
+			if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+		} catch (error) {
+		}
+	}
+});
+
+// --- Wake lock (keep screen on in the car mount while playing) ---
+async function requestWakeLock() {
+	try {
+		if ('wakeLock' in navigator) {
+			wakeLock = await navigator.wakeLock.request('screen');
+		}
+	} catch (error) {
+		wakeLock = null;
+	}
+}
+
+function releaseWakeLock() {
+	try {
+		if (wakeLock) wakeLock.release();
+	} catch (error) {
+	}
+	wakeLock = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+	if (document.visibilityState === 'visible' && currentUrl && !audio.paused) {
+		requestWakeLock();
+	}
+});
+
+// --- Persistence (shares last station with index.html) ---
+function rememberStation(station) {
+	try {
+		localStorage.setItem(storageKey, JSON.stringify({
+			country: station.country,
+			category: station.category,
+			name: station.name
+		}));
+	} catch (error) {
+	}
+}
+
+function restoreLastStation() {
+	try {
+		const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+		if (!saved || !saved.name) return false;
+		const index = stations.findIndex(station => station.name === saved.name);
+		if (index >= 0) {
+			selectStation(index, false);
+			return true;
+		}
+	} catch (error) {
+	}
+	return false;
+}
+
+// --- Events ---
+playButton.addEventListener('click', togglePlay);
+prevButton.addEventListener('click', () => moveStation(-1));
+nextButton.addEventListener('click', () => moveStation(1));
+
+document.addEventListener('keydown', event => {
+	if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+	if (event.key === 'ArrowRight') {
+		event.preventDefault();
+		moveStation(1);
+	}
+
+	if (event.key === 'ArrowLeft') {
+		event.preventDefault();
+		moveStation(-1);
+	}
+
+	if (event.key === ' ' && (currentStation || stations.length)) {
+		event.preventDefault();
+		togglePlay();
+	}
+});
+
+audio.addEventListener('ended', () => {
+	currentUrl = null;
+	releaseWakeLock();
+	setStatus('stopped');
+	renderPlayButton();
+});
+
+audio.addEventListener('error', () => {
+	if (currentUrl) stopAudio();
+});
+
+// --- Init ---
+renderVoiceButton();
+renderPresets();
+if (!restoreLastStation()) {
+	renderNowPlaying();
+	renderPlayButton();
+	setStatus('stopped');
+}
+
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('sw.js').catch(() => {
+		});
+	});
+}
+</script>
+</body>
+</html>

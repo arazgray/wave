@@ -12,6 +12,7 @@ metadata:
 No-build static app. Files that matter:
 
 - `index.html` — the basic app. Edit this one.
+- `car.html` — driving UI. Zero-scroll, giant controls, presets; see "Car UI" below.
 - `stations.js` — `const stations = [...]`, loaded before the inline script.
 - `coverarts/<slug>.jpg` — per-station covers (local only, never external URLs).
 - `cover-art-placeholder.jpg` — 1080x1080 JPEG default cover in root. Media Session only, never shown in list UI.
@@ -69,3 +70,29 @@ No cover art in the list UI — artwork exists only in `MediaMetadata`. Read
   `node --check` that too (pad a `const stations=[];` stub first).
 - For artwork logic, stub `document.baseURI` and assert: no-cover → default
   only; with-cover → station entries first, default entries after.
+
+## Car UI (`car.html`)
+
+Distraction-free driving layout. Rules, in priority order:
+
+- Zero scroll: `body { overflow: hidden }`, everything fits one viewport
+  (`grid-template-rows: auto minmax(0, 1fr) auto auto auto`).
+- Dark amber-on-black only (glare-free, night-safe). Status pill color-coded:
+  grey STOPPED / pulsing amber LOADING / green PLAYING.
+- Giant targets: transport buttons `min-height: 104px`, presets `78px`,
+  voice toggle `56px`. One-glance station name via
+  `clamp(2rem, 8vw, 3.4rem)` + 2-line clamp, `aria-live="polite"` stage.
+- No filters while driving: prev/next cycles ALL stations (modulo).
+- 6 presets, car-stereo behavior: tap = play, 650ms hold = save current
+  (vibrate + green flash + spoken confirm). Stored as names in
+  `wave:carPresets`; unresolvable names render as disabled "Empty".
+  Suppress the synthetic `click` after pointer handling to avoid double-play.
+- Wake Lock while playing (`navigator.wakeLock.request('screen')`),
+  released on stop, re-acquired on `visibilitychange`. All in try/catch.
+- Spoken station names via `speechSynthesis` (cancel before speak),
+  toggle in `wave:carAnnounce` (default on), only on user-initiated change —
+  never on silent restore.
+- Shares `wave:lastStation` with `index.html` (same shape); if nothing
+  selected, Play starts station 0.
+- Landscape short screens: presets collapse to a single 6-column row,
+  hint line hidden.
