@@ -138,6 +138,21 @@ header {
 	align-items: stretch;
 }
 
+.version-links {
+	margin-top: 0.55rem;
+	text-align: center;
+	font-size: 0.75rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #5a3b21;
+}
+
+.version-links a {
+	color: #3a2110;
+	font-weight: 700;
+	padding: 0.5rem 0.25rem;
+}
+
 .brand-plate,
 .speaker-grille {
 	border-radius: 16px;
@@ -624,6 +639,9 @@ html[data-state="loading"] #playButton {
 				</div>
 				<div class="speaker-grille" aria-hidden="true"></div>
 			</div>
+			<div class="version-links" aria-label="Other versions">
+				<a href="index.html">Default</a> &middot; <a href="classic.html">Classic</a> &middot; <a href="car.html">Car</a>
+			</div>
 		</div>
 	</header>
 
@@ -868,6 +886,65 @@ function destroyHls() {
 	}
 }
 
+/* Tuning static (noise.mp3): preloaded once, cached in localStorage, looped
+   quietly while a station stream connects, so tuning feels like a real radio.
+   Not used in index.html. */
+const noiseAudio = new Audio();
+noiseAudio.loop = true;
+noiseAudio.preload = 'auto';
+noiseAudio.volume = 0.2;
+
+(function initNoise() {
+	const key = 'wave:noise';
+
+	const useDataUrl = dataUrl => {
+		if (!noiseAudio.src) noiseAudio.src = dataUrl;
+	};
+
+	try {
+		const cached = localStorage.getItem(key);
+		if (cached) {
+			useDataUrl(cached);
+			return;
+		}
+	} catch (error) {
+	}
+
+	fetch('noise.mp3').then(response => {
+		if (!response.ok) throw new Error('noise fetch failed');
+		return response.blob();
+	}).then(blob => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			const dataUrl = reader.result;
+			try {
+				localStorage.setItem(key, dataUrl);
+			} catch (error) {
+			}
+			useDataUrl(dataUrl);
+		};
+		reader.readAsDataURL(blob);
+	}).catch(() => {
+		useDataUrl('noise.mp3');
+	});
+})();
+
+function startNoise() {
+	try {
+		noiseAudio.currentTime = 0;
+		const play = noiseAudio.play();
+		if (play && play.catch) play.catch(() => {});
+	} catch (error) {
+	}
+}
+
+function pauseNoise() {
+	try {
+		noiseAudio.pause();
+	} catch (error) {
+	}
+}
+
 function stopAudio() {
 	isLoading = false;
 	destroyHls();
@@ -875,6 +952,7 @@ function stopAudio() {
 	audio.removeAttribute('src');
 	audio.load();
 	currentUrl = null;
+	pauseNoise();
 	playButton.textContent = 'Play';
 	setAppState(currentStation ? 'ready' : 'idle');
 	highlightStation(currentStationIndex);
@@ -902,9 +980,11 @@ function playStation(station) {
 	playButton.textContent = 'Loading';
 	setAppState('loading');
 	updateMediaSession(station);
+	startNoise();
 
 	const onPlaySuccess = () => {
 		isLoading = false;
+		pauseNoise();
 		playButton.textContent = 'Stop';
 		setAppState('playing');
 		highlightStation(currentStationIndex);

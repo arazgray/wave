@@ -17,6 +17,11 @@ No-build static app. Files that matter:
 - `coverarts/<slug>.jpg` — per-station covers (local only, never external URLs).
 - `cover-art-placeholder.jpg` — 1080x1080 JPEG default cover in root. Media Session only, never shown in list UI.
 - `classic.html`, `sk.html` — alternate themes. Leave alone unless explicitly asked.
+- Every page links the other three versions (`index.html` header byline,
+  classic under brand bar, sk inside radio-face, car in footer to protect
+  zero-scroll). Labels: Default / Classic / SK / Car. Style links per theme.
+- `noise.mp3` — tuning static (~300KB). Preloaded + cached, looped while a
+  station connects. classic/sk/car only, never index.html; see "Tuning static".
 - `hls.js`, `sw.js`, `manifest.json`, `icon.svg`, `equalizer.gif` — infra, don't touch.
 
 ## Station schema (`stations.js`)
@@ -39,20 +44,19 @@ No cover art in the list UI — artwork exists only in `MediaMetadata`. Read
 - Resolve to absolute URLs: `new URL(src, document.baseURI).href`.
 - Sizes `96x96`, `128x128`, `192x192`, `512x512`, `type: 'image/jpeg'`.
 
-## Filters UI
+## Filters UI (`index.html` only)
 
 - Derive both lists the same way, sorted, with an `All` default:
   `[...new Set(stations.map(s => s.country))].sort()` (same for `category`).
 - Combined AND filter; label helper (`Country · Category` / `All stations`).
-- Grid: `repeat(4, minmax(0, 1fr))`, `gap: 0.35rem`; small pills
-  (`padding: 0.3rem 0.4rem`, `font-size: 0.78rem`, ellipsis, nowrap).
-- **Filters must live INSIDE the scrollable `<main>`**, above the station list.
-  A separate fixed filter row eats the whole mobile viewport and leaves the
-  station list at ~0 height with nowhere to scroll.
-- Layout: `.app { grid-template-rows: auto minmax(0, 1fr) auto; }`
-  (header / scroll area / player); scroll container needs `min-height: 0`,
-  `overflow-y: auto`, and `padding-bottom: 2rem` so last stations clear the
-  sticky bottom player, which stays a grid row.
+- Horizontal single-row bars, one per group: `.filter-scroll` wraps each list
+  (`overflow-x: auto`, hidden scrollbar, touch momentum, edge-bleed padding),
+  `.filter-grid` is `display: flex` with `min-width: max-content` and nowrap
+  pills. Tapped pill scrolls into view (`inline: 'nearest'`).
+- Filters live in a fixed `<nav>` above the scrollable `<main>` (each bar is a
+  single row, so the viewport-eating problem of the old 4-per-row grid inside
+  `<main>` does not apply). Layout:
+  `.app { grid-template-rows: auto auto 1fr auto; }`.
 
 ## Playback
 
@@ -70,6 +74,19 @@ No cover art in the list UI — artwork exists only in `MediaMetadata`. Read
   `node --check` that too (pad a `const stations=[];` stub first).
 - For artwork logic, stub `document.baseURI` and assert: no-cover → default
   only; with-cover → station entries first, default entries after.
+
+## Tuning static (`noise.mp3`; classic/sk/car only, never index.html)
+
+- At init, fetch `noise.mp3` once (~300KB → ~415KB base64), store the data URL
+  in `localStorage` (`wave:noise`), and point a dedicated looped
+  `noiseAudio` element (`volume: 0.2`, `preload: auto`) at it. On later loads,
+  use the cached copy and skip the network. Quota errors fall back to memory;
+  fetch failure falls back to plain `'noise.mp3'` src. All guarded try/catch.
+- `playStation`: `stopAudio()` first, then `startNoise()` right when the
+  stream load begins (resets `currentTime`, swallows play() rejections —
+  the call always follows a user gesture or active playback).
+- `pauseNoise()` on stream success AND inside `stopAudio()` (covers manual
+  stop and load errors, since error paths route through `stopAudio()`).
 
 ## Car UI (`car.html`)
 

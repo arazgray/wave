@@ -156,6 +156,27 @@ body::before {
   text-transform: uppercase;
 }
 
+/* Other versions */
+.version-links {
+  font-family: var(--label-font);
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(255,184,51,0.4);
+  padding: 0 20px 8px;
+}
+
+.version-links a {
+  color: rgba(255,184,51,0.75);
+  text-decoration: none;
+  padding: 6px 4px;
+}
+
+.version-links a:hover {
+  color: var(--amber);
+}
+
 /* ─── MAIN DISPLAY WINDOW ─── */
 .display-window {
   margin: 0 16px 12px;
@@ -751,6 +772,10 @@ body::before {
     </div>
   </div>
 
+  <div class="version-links" aria-label="Other versions">
+    <a href="index.html">Default</a> &middot; <a href="sk.html">SK</a> &middot; <a href="car.html">Car</a>
+  </div>
+
   <!-- Display window -->
   <div class="display-window">
     <div class="display-inner">
@@ -1100,6 +1125,65 @@ function destroyHls() {
   if (audio.hls)   { audio.hls.destroy();  audio.hls = null;  }
 }
 
+/* ── Tuning static (noise.mp3): preloaded once, cached in localStorage,
+   looped quietly while a station stream connects, so tuning feels like a
+   real radio. Not used in index.html. ── */
+const noiseAudio = new Audio();
+noiseAudio.loop = true;
+noiseAudio.preload = 'auto';
+noiseAudio.volume = 0.2;
+
+(function initNoise() {
+  const key = 'wave:noise';
+
+  const useDataUrl = dataUrl => {
+    if (!noiseAudio.src) noiseAudio.src = dataUrl;
+  };
+
+  try {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      useDataUrl(cached);
+      return;
+    }
+  } catch (error) {
+  }
+
+  fetch('noise.mp3').then(response => {
+    if (!response.ok) throw new Error('noise fetch failed');
+    return response.blob();
+  }).then(blob => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      try {
+        localStorage.setItem(key, dataUrl);
+      } catch (error) {
+      }
+      useDataUrl(dataUrl);
+    };
+    reader.readAsDataURL(blob);
+  }).catch(() => {
+    useDataUrl('noise.mp3');
+  });
+})();
+
+function startNoise() {
+  try {
+    noiseAudio.currentTime = 0;
+    const play = noiseAudio.play();
+    if (play && play.catch) play.catch(() => {});
+  } catch (error) {
+  }
+}
+
+function pauseNoise() {
+  try {
+    noiseAudio.pause();
+  } catch (error) {
+  }
+}
+
 function stopAudio() {
   isLoading = false;
   destroyHls();
@@ -1107,6 +1191,7 @@ function stopAudio() {
   audio.removeAttribute('src');
   audio.load();
   currentUrl = null;
+  pauseNoise();
   powerLed.className = 'power-led';
   playBtn.innerHTML = '&#9654;';
   playBtn.classList.remove('playing', 'loading');
@@ -1136,6 +1221,7 @@ function playStation(station) {
 
   const onSuccess = () => {
     isLoading = false;
+    pauseNoise();
     powerLed.className = 'power-led on';
     playBtn.innerHTML = '&#9646;&#9646;';
     playBtn.classList.remove('loading');
@@ -1167,6 +1253,7 @@ function playStation(station) {
     }
   };
   updateMediaSession();
+  startNoise();
 
   if (station.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
     currentHls = new Hls();
