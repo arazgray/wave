@@ -1,6 +1,6 @@
 ---
 name: wave-radio
-description: "Conventions for this Wave static radio app. Use when editing the player, station list, filters, cover art, or Media Session integration. Covers: stations.js schema and coverarts slug convention, lockscreen/Dynamic Island artwork with default fallback, 4-per-row country+category filter grids inside the scrollable main, HLS playback with native fallback, filtered-list prev/next wrapping, and last-station persistence. Do not apply to classic.html / sk.html (alternate themes, leave untouched unless asked)."
+description: "Conventions for this Wave static radio app. Use when editing the player, station list, filters, cover art, or Media Session integration. Covers: stations.js schema and coverarts slug convention, lockscreen/Dynamic Island artwork with default fallback, horizontal scrollable country+category filter bars, clean version URLs (car/ classic/ sk/ subfolders with base tag), HLS playback with native fallback, filtered-list prev/next wrapping, and last-station persistence. Do not apply to classic/ / sk/ (alternate themes, leave untouched unless asked)."
 license: MIT
 metadata:
   author: arazgray
@@ -9,17 +9,31 @@ metadata:
 
 # Wave Radio
 
-No-build static app. Files that matter:
+No-build static app. Clean URLs via one folder per version (so `/wave/car/`
+serves the car UI — required for homescreen installs). Files that matter:
 
-- `index.html` — the basic app. Edit this one.
-- `car.html` — driving UI. Zero-scroll, giant controls, presets; see "Car UI" below.
+- `index.html` — the basic app at `/wave/`. Edit this one.
+- `car/index.html`, `classic/index.html`, `sk/index.html` — version subfolders.
+  Each has `<base href="../">` FIRST in `<head>` (before any relative URL),
+  so all shared relative paths (scripts, covers, noise, manifest, sw.js)
+  keep resolving to the app root exactly as before.
+- Version links are folder-style: root uses `car/` / `classic/` / `sk/`;
+  subpages use `./` for Default (never `../` — it resolves against the base
+  tag to the domain root) and bare `classic/` / `sk/` / `car/` for siblings.
+  Placement: `index.html` header byline, classic under brand bar, sk inside
+  radio-face, car in footer (protects zero-scroll). Labels: Default / Classic
+  / SK / Car. Style links per theme.
+- Per-version manifests at root (`manifest-car.json`, `manifest-classic.json`,
+  `manifest-sk.json`): `start_url` points at its own folder so each homescreen
+  install launches its version; icons/theme per theme. Subpages link their own
+  manifest, never the shared `manifest.json` (classic previously had none —
+  it has icon + manifest + theme-color now).
+- `car/index.html` — driving UI. Zero-scroll, giant controls, presets; see "Car UI" below.
 - `stations.js` — `const stations = [...]`, loaded before the inline script.
 - `coverarts/<slug>.jpg` — per-station covers (local only, never external URLs).
 - `cover-art-placeholder.jpg` — 1080x1080 JPEG default cover in root. Media Session only, never shown in list UI.
-- `classic.html`, `sk.html` — alternate themes. Leave alone unless explicitly asked.
-- Every page links the other three versions (`index.html` header byline,
-  classic under brand bar, sk inside radio-face, car in footer to protect
-  zero-scroll). Labels: Default / Classic / SK / Car. Style links per theme.
+- `classic/`, `sk/` — alternate themes. Leave alone unless explicitly asked.
+  (Live at `classic/index.html`, `sk/index.html`; same for car.)
 - `noise.mp3` — tuning static (~300KB). Preloaded + cached, looped while a
   station connects. classic/sk/car only, never index.html; see "Tuning static".
 - `hls.js`, `sw.js`, `manifest.json`, `icon.svg`, `equalizer.gif` — infra, don't touch.
@@ -88,7 +102,7 @@ No cover art in the list UI — artwork exists only in `MediaMetadata`. Read
 - `pauseNoise()` on stream success AND inside `stopAudio()` (covers manual
   stop and load errors, since error paths route through `stopAudio()`).
 
-## Car UI (`car.html`)
+## Car UI (`car/index.html`)
 
 Distraction-free driving layout. Rules, in priority order:
 

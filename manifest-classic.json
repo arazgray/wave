@@ -1,0 +1,22 @@
+{
+  "name": "Wave Classic",
+  "short_name": "Wave Classic",
+  "description": "Easy way to listen to good radios.",
+  "start_url": "classic/",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0f0c07",
+  "theme_color": "#1a1208",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
