@@ -1,12 +1,12 @@
 {
-  "name": "Wave",
-  "short_name": "Wave",
+  "name": "Wave Modern",
+  "short_name": "Wave Modern",
   "description": "Easy way to listen to good radios.",
-  "start_url": ".",
+  "start_url": "modern/",
   "scope": ".",
   "display": "standalone",
-  "background_color": "#0f0c07",
-  "theme_color": "#1a1208",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "icon.svg",

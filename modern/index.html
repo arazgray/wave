@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<base href="../">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest-modern.json">
+<meta name="theme-color" content="#ffffff">
+<title>Wave Modern</title>
+<style>
+:root {
+	font-family: sans-serif;
+	font-size: 16px;
+	color: #102033;
+	background: #f5f9ff;
+	--player-height: 160px;
+	--line: #cad8ea;
+	--blue: #1d5f9e;
+	--soft: #eaf3ff;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	background: #f5f9ff;
+	color: #102033;
+}
+
+body {
+	min-height: 100dvh;
+	overflow: hidden;
+}
+
+a {
+	color: #102033;
+	text-decoration: none;
+}
+
+button {
+	font: inherit;
+	background: var(--blue);
+	color: #fff;
+	border: 1px solid var(--blue);
+	border-radius: 8px;
+	padding: 0.7rem 0.85rem;
+	line-height: 1;
+	min-height: 44px;
+}
+
+button:focus-visible,
+a:focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 2px;
+}
+
+button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+button.secondary {
+	background: #fff;
+	color: #24415f;
+	border-color: var(--line);
+}
+
+.app {
+	width: 100%;
+	max-width: 900px;
+	height: 100dvh;
+	margin: 0 auto;
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	background: #fff;
+}
+
+header {
+	padding: 0.8rem 0.85rem 0.55rem;
+	border-bottom: 1px solid var(--line);
+}
+
+h1,
+p {
+	margin: 0;
+}
+
+h1 {
+	font-size: 1.2rem;
+	line-height: 1.2;
+}
+
+	header p {
+		margin-top: 0.25rem;
+		font-size: 0.9rem;
+		line-height: 1.35;
+		color: #5e7187;
+	}
+
+	.versions {
+		margin-top: 0.35rem;
+		font-size: 0.85rem;
+		line-height: 1.35;
+		color: #5e7187;
+	}
+
+	.versions a {
+		color: var(--blue);
+	}
+
+.filters {
+	border-bottom: 1px solid var(--line);
+	padding: 0.55rem 0.75rem;
+	display: grid;
+	gap: 0.5rem;
+}
+
+.filter-group {
+	min-width: 0;
+}
+
+.filter-title {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #5e7187;
+	margin: 0 0 0.35rem;
+}
+
+.filter-scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none;
+	margin: 0 -0.75rem;
+	padding: 0 0.75rem;
+}
+
+.filter-scroll::-webkit-scrollbar {
+	display: none;
+}
+
+.filter-grid {
+	list-style: none;
+	margin: 0;
+	padding: 0.1rem 0;
+	display: flex;
+	gap: 0.4rem;
+	min-width: max-content;
+}
+
+.filter-grid a {
+	display: block;
+	padding: 0.45rem 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	font-size: 0.85rem;
+	line-height: 1;
+	background: #fff;
+	white-space: nowrap;
+}
+
+.filter-grid a.selected {
+	background: var(--blue);
+	border-color: var(--blue);
+	color: #fff;
+}
+
+.station-wrap {
+	min-height: 0;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: 0.65rem 0.75rem 2rem;
+}
+
+.section-title {
+	font-size: 0.85rem;
+	font-weight: 600;
+	margin: 0 0 0.5rem;
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+#stationCount {
+	font-weight: 400;
+	opacity: 0.65;
+}
+
+#stations {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+#stations li + li {
+	margin-top: 0.45rem;
+}
+
+.station-link {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 0.7rem;
+	min-height: 54px;
+}
+
+.station-link.selected {
+	background: var(--soft);
+	border-color: #8fbbe8;
+	color: #102033;
+}
+
+.station-details {
+	min-width: 0;
+}
+
+.equalizer {
+	display: none;
+	width: 32px;
+	height: 22px;
+	image-rendering: pixelated;
+}
+
+.station-link.playing .equalizer {
+	display: block;
+}
+
+.station-name {
+	display: block;
+	font-size: 0.98rem;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.metadata {
+	display: block;
+	font-size: 0.8rem;
+	line-height: 1.3;
+	margin-top: 0.25rem;
+	color: inherit;
+	opacity: 0.7;
+}
+
+#stationsMessage {
+	font-size: 0.9rem;
+	line-height: 1.4;
+	padding: 1rem 0;
+	color: #5e7187;
+}
+
+.player-shell {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	background: #fff;
+	border-top: 1px solid var(--line);
+	padding: 0.7rem 0.75rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+	min-height: var(--player-height);
+}
+
+#player {
+	display: grid;
+	gap: 0.55rem;
+}
+
+.now-playing {
+	min-width: 0;
+}
+
+#playerTitle {
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#playerQuality {
+	font-size: 0.8rem;
+	white-space: nowrap;
+	opacity: 0.7;
+}
+
+#playerDescription {
+	font-size: 0.85rem;
+	line-height: 1.35;
+	margin-top: 0.25rem;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.player-actions {
+	display: grid;
+	grid-template-columns: 1fr 1.25fr 1fr;
+	gap: 0.45rem;
+}
+
+@media screen and (min-width: 650px) {
+	:root {
+		--player-height: 150px;
+	}
+
+	.app {
+		border-left: 1px solid var(--line);
+		border-right: 1px solid var(--line);
+	}
+
+	header {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	.station-wrap {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	.player-shell {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	#player {
+		grid-template-columns: 1fr 330px;
+		align-items: end;
+	}
+
+	.player-actions {
+		grid-column: 2;
+		grid-row: 1;
+	}
+}
+</style>
+</head>
+<body>
+<div class="app">
+	<header>
+		<h1>Wave</h1>
+		<p>Good radio, Simple. By <a href="https://arazgray.com" target="_blank">Araz Gray</a></p>
+		<p class="versions">Other versions: <a href="./">Default</a> &middot; <a href="classic/">Classic</a> &middot; <a href="sk/">SK</a> &middot; <a href="car/">Car</a></p>
+	</header>
+
+	<nav class="filters" aria-label="Filters">
+		<div class="filter-group">
+			<h2 class="filter-title">Country</h2>
+			<div class="filter-scroll"><ul id="countries" class="filter-grid"></ul></div>
+		</div>
+		<div class="filter-group">
+			<h2 class="filter-title">Category</h2>
+			<div class="filter-scroll"><ul id="categories" class="filter-grid"></ul></div>
+		</div>
+	</nav>
+
+	<main class="station-wrap">
+		<h2 class="section-title"><span id="sectionLabel">Stations</span><span id="stationCount"></span></h2>
+		<ul id="stations"></ul>
+		<p id="stationsMessage">No stations found</p>
+	</main>
+
+	<section class="player-shell" aria-label="Player">
+		<div id="player">
+			<div class="now-playing">
+				<div class="player-title-row">
+					<div id="playerTitle">Nothing selected</div>
+					<div id="playerQuality"></div>
+				</div>
+				<p id="playerDescription">Choose filters, then choose a station.</p>
+			</div>
+
+			<div class="player-actions">
+				<button id="prevButton" type="button" class="secondary" disabled>Prev</button>
+				<button id="playButton" type="button" disabled>Play</button>
+				<button id="nextButton" type="button" class="secondary" disabled>Next</button>
+			</div>
+		</div>
+	</section>
+</div>
+
+<audio id="audioPlayer" controls style="display:none"></audio>
+<script src="./hls.js"></script>
+<script src="./stations.js"></script>
+<script>
+const audio = document.getElementById('audioPlayer');
+const countriesList = document.getElementById('countries');
+const categoriesList = document.getElementById('categories');
+const stationsList = document.getElementById('stations');
+const stationsMessage = document.getElementById('stationsMessage');
+const playerTitle = document.getElementById('playerTitle');
+const playerDescription = document.getElementById('playerDescription');
+const playerQuality = document.getElementById('playerQuality');
+const prevButton = document.getElementById('prevButton');
+const playButton = document.getElementById('playButton');
+const nextButton = document.getElementById('nextButton');
+const sectionLabel = document.getElementById('sectionLabel');
+const stationCount = document.getElementById('stationCount');
+
+const countries = [...new Set(stations.map(station => station.country))].sort();
+const categories = [...new Set(stations.map(station => station.category))].sort();
+const storageKey = 'wave:lastStation';
+const DEFAULT_COVER_ART = './cover-art-placeholder.jpg';
+
+let selectedCountry = 'All';
+let selectedCategory = 'All';
+let currentStations = [];
+let currentStationIndex = -1;
+let currentStation = null;
+let currentUrl = null;
+let currentHls = null;
+let isLoading = false;
+
+function getFilteredStations() {
+	return stations.filter(station =>
+		(selectedCountry === 'All' || station.country === selectedCountry) &&
+		(selectedCategory === 'All' || station.category === selectedCategory)
+	);
+}
+
+function getSectionLabel() {
+	if (selectedCountry !== 'All' && selectedCategory !== 'All') return selectedCountry + ' · ' + selectedCategory;
+	if (selectedCountry !== 'All') return selectedCountry;
+	if (selectedCategory !== 'All') return selectedCategory;
+	return 'All stations';
+}
+
+function applyFilters() {
+	const keepPlayer = currentStation && (currentUrl || isLoading);
+	currentStations = getFilteredStations();
+	currentStationIndex = keepPlayer ? currentStations.findIndex(station => station.url === currentStation.url) : -1;
+
+	highlightFilter(countriesList, selectedCountry);
+	highlightFilter(categoriesList, selectedCategory);
+	renderStations(currentStations);
+	highlightStation(currentStationIndex);
+	if (!keepPlayer) resetPlayerSelection('Choose a station from the list below.');
+}
+
+function renderFilters() {
+	renderFilterList(countriesList, ['All', ...countries], selectedCountry, value => {
+		selectedCountry = value;
+		applyFilters();
+	});
+	renderFilterList(categoriesList, ['All', ...categories], selectedCategory, value => {
+		selectedCategory = value;
+		applyFilters();
+	});
+}
+
+function renderFilterList(listEl, values, selectedValue, onSelect) {
+	listEl.innerHTML = '';
+
+	values.forEach(value => {
+		const li = document.createElement('li');
+		const link = document.createElement('a');
+		link.href = '#';
+		link.textContent = value;
+		link.setAttribute('role', 'tab');
+		const isSelected = value === selectedValue;
+		link.classList.toggle('selected', isSelected);
+		link.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+		link.addEventListener('click', event => {
+			event.preventDefault();
+			onSelect(value);
+			link.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+		});
+
+		li.appendChild(link);
+		listEl.appendChild(li);
+	});
+}
+
+function highlightFilter(listEl, selectedValue) {
+	listEl.querySelectorAll('a').forEach(link => {
+		const isSelected = link.textContent === selectedValue;
+		link.classList.toggle('selected', isSelected);
+		link.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+	});
+}
+
+function renderStations(list) {
+	stationsList.innerHTML = '';
+	stationsMessage.style.display = list.length ? 'none' : 'block';
+	sectionLabel.textContent = getSectionLabel();
+	stationCount.textContent = list.length ? list.length + ' station' + (list.length === 1 ? '' : 's') : '';
+
+	list.forEach((station, index) => {
+		const li = document.createElement('li');
+		const link = document.createElement('a');
+		const details = document.createElement('span');
+		const name = document.createElement('span');
+		const meta = document.createElement('span');
+		const equalizer = document.createElement('img');
+
+		link.href = '#';
+		link.className = 'station-link';
+		link.dataset.index = String(index);
+		link.setAttribute('aria-current', 'false');
+
+		details.className = 'station-details';
+
+		name.className = 'station-name';
+		name.textContent = station.name;
+
+		meta.className = 'metadata';
+		meta.textContent = station.country + ' · ' + station.category + ' · ' + station.quality;
+
+		equalizer.className = 'equalizer';
+		equalizer.src = 'equalizer.gif';
+		equalizer.alt = '';
+		equalizer.setAttribute('aria-hidden', 'true');
+
+		details.appendChild(name);
+		details.appendChild(meta);
+		link.appendChild(details);
+		link.appendChild(equalizer);
+		link.addEventListener('click', event => {
+			event.preventDefault();
+			selectStation(index, true);
+		});
+
+		li.appendChild(link);
+		stationsList.appendChild(li);
+	});
+}
+
+function selectStation(index, autoplay) {
+	if (!currentStations[index]) return;
+
+	const wasPlaying = !!currentUrl && !audio.paused;
+	const station = currentStations[index];
+	currentStationIndex = index;
+	currentStation = station;
+
+	highlightStation(index);
+	setPlayerStation(station);
+	setControlsEnabled(true);
+	rememberStation(station);
+
+	if (autoplay || wasPlaying) {
+		playStation(station);
+	}
+}
+
+function highlightStation(index) {
+	document.querySelectorAll('#stations .station-link').forEach(link => {
+		const isSelected = Number(link.dataset.index) === index;
+		link.classList.toggle('selected', isSelected);
+		link.classList.toggle('playing', isSelected && currentUrl && !audio.paused);
+		link.setAttribute('aria-current', isSelected ? 'true' : 'false');
+		if (isSelected) link.scrollIntoView({ block: 'nearest' });
+	});
+}
+
+function setPlayerStation(station) {
+	playerTitle.textContent = station.name;
+	playerDescription.textContent = station.description;
+	playerQuality.textContent = station.category + ' · ' + station.quality;
+	playButton.textContent = currentUrl === station.url && !audio.paused ? 'Stop' : 'Play';
+	highlightStation(currentStationIndex);
+	document.title = station.name + ' · Wave Modern';
+}
+
+function resetPlayerSelection(message) {
+	stopAudio();
+	currentStation = null;
+	playerTitle.textContent = 'Nothing selected';
+	playerDescription.textContent = message || 'Choose a station from the list below.';
+	playerQuality.textContent = '';
+	playButton.textContent = 'Play';
+	setControlsEnabled(false);
+	document.title = 'Wave Modern';
+}
+
+function setControlsEnabled(enabled) {
+	prevButton.disabled = !enabled;
+	playButton.disabled = !enabled;
+	nextButton.disabled = !enabled;
+}
+
+function destroyHls() {
+	if (currentHls) {
+		currentHls.destroy();
+		currentHls = null;
+	}
+
+	if (audio.hls) {
+		audio.hls.destroy();
+		audio.hls = null;
+	}
+}
+
+function stopAudio() {
+	isLoading = false;
+	destroyHls();
+	audio.pause();
+	audio.removeAttribute('src');
+	audio.load();
+	currentUrl = null;
+	playButton.textContent = 'Play';
+	highlightStation(currentStationIndex);
+}
+
+function togglePlay() {
+	const station = currentStations[currentStationIndex] || currentStation;
+	if (!station || isLoading) return;
+
+	if (currentUrl === station.url && !audio.paused) {
+		stopAudio();
+		return;
+	}
+
+	playStation(station);
+}
+
+function playStation(station) {
+	if (!station) return;
+
+	stopAudio();
+	currentStation = station;
+	isLoading = true;
+	currentUrl = station.url;
+	playButton.textContent = 'Loading';
+	updateMediaSession(station);
+
+	const onPlaySuccess = () => {
+		isLoading = false;
+		playButton.textContent = 'Stop';
+		highlightStation(currentStationIndex);
+		document.title = station.name + ' · Wave Modern';
+	};
+
+	const onPlayError = error => {
+		isLoading = false;
+		stopAudio();
+	};
+
+	if (station.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+		currentHls = new Hls();
+		audio.hls = currentHls;
+		currentHls.loadSource(station.url);
+		currentHls.attachMedia(audio);
+		currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+			audio.play().then(onPlaySuccess).catch(onPlayError);
+		});
+		currentHls.on(Hls.Events.ERROR, (event, data) => {
+			if (data && data.fatal) {
+				onPlayError(data.details || 'HLS error');
+			}
+		});
+		return;
+	}
+
+	if (station.url.includes('.m3u8') && audio.canPlayType('application/vnd.apple.mpegurl')) {
+		audio.src = station.url;
+		audio.play().then(onPlaySuccess).catch(onPlayError);
+		return;
+	}
+
+	audio.src = station.url;
+	audio.play().then(onPlaySuccess).catch(onPlayError);
+}
+
+function playNextStation() {
+	moveStation(1);
+}
+
+function playPreviousStation() {
+	moveStation(-1);
+}
+
+function moveStation(direction) {
+	if (!currentStations.length) return;
+
+	let nextIndex;
+	if (currentStationIndex < 0) {
+		nextIndex = direction > 0 ? 0 : currentStations.length - 1;
+	} else {
+		nextIndex = (currentStationIndex + direction + currentStations.length) % currentStations.length;
+	}
+
+	selectStation(nextIndex, true);
+}
+
+function resolveArtworkSrc(src) {
+	try {
+		return new URL(src, document.baseURI).href;
+	} catch (error) {
+		return src;
+	}
+}
+
+function getStationArtwork(station) {
+	// Always include the default cover art after the station cover,
+	// so lockscreen / Dynamic Island still has an image when a station
+	// cover is missing, empty, or not yet uploaded (404).
+	const sizes = ['96x96', '128x128', '192x192', '512x512'];
+	const artwork = [];
+
+	if (station.cover) {
+		const stationSrc = resolveArtworkSrc(station.cover);
+		sizes.forEach(size => {
+			artwork.push({ src: stationSrc, sizes: size, type: 'image/jpeg' });
+		});
+	}
+
+	const defaultSrc = resolveArtworkSrc(DEFAULT_COVER_ART);
+	sizes.forEach(size => {
+		artwork.push({ src: defaultSrc, sizes: size, type: 'image/jpeg' });
+	});
+
+	return artwork;
+}
+
+function updateMediaSession(station) {
+	if ('mediaSession' in navigator) {
+		navigator.mediaSession.metadata = new MediaMetadata({
+			title: station.name,
+			artist: station.category,
+			album: station.country,
+			artwork: getStationArtwork(station)
+		});
+
+		navigator.mediaSession.setActionHandler('nexttrack', playNextStation);
+		navigator.mediaSession.setActionHandler('previoustrack', playPreviousStation);
+		navigator.mediaSession.setActionHandler('play', () => {
+			const station = currentStations[currentStationIndex] || currentStation;
+			if (station) playStation(station);
+		});
+		navigator.mediaSession.setActionHandler('pause', () => {
+			stopAudio();
+		});
+	}
+}
+
+function rememberStation(station) {
+	try {
+		localStorage.setItem(storageKey, JSON.stringify({
+			country: station.country,
+			category: station.category,
+			name: station.name
+		}));
+	} catch (error) {
+	}
+}
+
+function restoreLastStation() {
+	try {
+		const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+		if (!saved || !saved.name) return false;
+
+		if (saved.country && countries.includes(saved.country)) {
+			selectedCountry = saved.country;
+		}
+		if (saved.category && categories.includes(saved.category)) {
+			selectedCategory = saved.category;
+		}
+
+		applyFilters();
+
+		const index = currentStations.findIndex(station => station.name === saved.name);
+		if (index >= 0) {
+			selectStation(index, false);
+		} else {
+			// Saved station is outside current filters: fall back to full list.
+			selectedCountry = 'All';
+			selectedCategory = 'All';
+			applyFilters();
+			const fallbackIndex = currentStations.findIndex(station => station.name === saved.name);
+			if (fallbackIndex >= 0) {
+				selectStation(fallbackIndex, false);
+			}
+		}
+
+		return index >= 0;
+	} catch (error) {
+		return false;
+	}
+}
+
+playButton.addEventListener('click', togglePlay);
+prevButton.addEventListener('click', playPreviousStation);
+nextButton.addEventListener('click', playNextStation);
+
+document.addEventListener('keydown', event => {
+	if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+
+	if (event.key === 'ArrowRight') {
+		event.preventDefault();
+		playNextStation();
+	}
+
+	if (event.key === 'ArrowLeft') {
+		event.preventDefault();
+		playPreviousStation();
+	}
+
+	if (event.key === ' ' && currentStation) {
+		event.preventDefault();
+		togglePlay();
+	}
+});
+
+audio.addEventListener('ended', () => {
+	playButton.textContent = 'Play';
+	currentUrl = null;
+	highlightStation(currentStationIndex);
+});
+
+audio.addEventListener('error', () => {
+	if (currentUrl) {
+		stopAudio();
+	}
+});
+
+renderFilters();
+
+if (!restoreLastStation()) {
+	applyFilters();
+}
+
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('sw.js').catch(() => {
+		});
+	});
+}
+</script>
+</body>
+</html>
